@@ -1524,6 +1524,46 @@ public abstract class AbstractRedisReactiveCommands<K, V> implements RedisHashRe
     }
 
     @Override
+    public Observable<String> xadd(K key, Map<K, V> body) {
+        return createObservable(() -> commandBuilder.xadd(key, null, body));
+    }
+
+    @Override
+    public Observable<String> xadd(K key, XAddArgs args, Map<K, V> body) {
+        return createObservable(() -> commandBuilder.xadd(key, args, body));
+    }
+
+    @Override
+    public Observable<String> xadd(K key, Object... keysAndValues) {
+        return createObservable(() -> commandBuilder.xadd(key, null, keysAndValues));
+    }
+
+    @Override
+    public Observable<String> xadd(K key, XAddArgs args, Object... keysAndValues) {
+        return createObservable(() -> commandBuilder.xadd(key, args, keysAndValues));
+    }
+
+    @Override
+    public Observable<StreamMessage<K, V>> xrange(K key, Range<String> range) {
+        return createDissolvingObservable(() -> commandBuilder.xrange(key, range, Limit.unlimited()));
+    }
+
+    @Override
+    public Observable<StreamMessage<K, V>> xrange(K key, Range<String> range, Limit limit) {
+        return createDissolvingObservable(() -> commandBuilder.xrange(key, range, limit));
+    }
+
+    @Override
+    public Observable<StreamMessage<K, V>> xread(XReadArgs.Stream<K>... streams) {
+        return createDissolvingObservable(() -> commandBuilder.xread(streams, null));
+    }
+
+    @Override
+    public Observable<StreamMessage<K, V>> xread(XReadArgs args, XReadArgs.Stream<K>... streams) {
+        return createDissolvingObservable(() -> commandBuilder.xread(streams, args));
+    }
+
+    @Override
     public Observable<Long> zadd(K key, double score, V member) {
         return createObservable(() -> commandBuilder.zadd(key, null, score, member));
     }

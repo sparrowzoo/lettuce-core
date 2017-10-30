@@ -25,21 +25,21 @@ import com.lambdaworks.redis.api.async.*;
 
 /**
  * A complete asynchronous and thread-safe cluster Redis API with 400+ Methods.
- * 
+ *
  * @param <K> Key type.
  * @param <V> Value type.
  * @author Mark Paluch
  * @since 4.0
  */
-public interface RedisClusterAsyncCommands<K, V>
-        extends RedisHashAsyncCommands<K, V>, RedisKeyAsyncCommands<K, V>, RedisStringAsyncCommands<K, V>,
-        RedisListAsyncCommands<K, V>, RedisSetAsyncCommands<K, V>, RedisSortedSetAsyncCommands<K, V>,
-        RedisScriptingAsyncCommands<K, V>, RedisServerAsyncCommands<K, V>, RedisHLLAsyncCommands<K, V>,
-        RedisGeoAsyncCommands<K, V>, BaseRedisAsyncCommands<K, V>, RedisClusterAsyncConnection<K, V> {
+public interface RedisClusterAsyncCommands<K, V> extends RedisHashAsyncCommands<K, V>, RedisKeyAsyncCommands<K, V>,
+        RedisStringAsyncCommands<K, V>, RedisListAsyncCommands<K, V>, RedisSetAsyncCommands<K, V>,
+        RedisSortedSetAsyncCommands<K, V>, RedisScriptingAsyncCommands<K, V>, RedisServerAsyncCommands<K, V>,
+        RedisHLLAsyncCommands<K, V>, RedisGeoAsyncCommands<K, V>, RedisStreamAsyncCommands<K, V>, BaseRedisAsyncCommands<K, V>,
+        RedisClusterAsyncConnection<K, V> {
 
     /**
      * Set the default timeout for operations.
-     * 
+     *
      * @param timeout the timeout value
      * @param unit the unit of the timeout value
      */
@@ -47,7 +47,7 @@ public interface RedisClusterAsyncCommands<K, V>
 
     /**
      * Authenticate to the server.
-     * 
+     *
      * @param password the password
      * @return String simple-string-reply
      */
@@ -223,7 +223,7 @@ public interface RedisClusterAsyncCommands<K, V>
 
     /**
      * Get array of cluster slots to node mappings.
-     * 
+     *
      * @return RedisFuture&lt;List&lt;Object&gt;&gt; array-reply nested list of slot ranges with IP/Port mappings.
      */
     RedisFuture<List<Object>> clusterSlots();
