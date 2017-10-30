@@ -22,6 +22,7 @@ package com.lambdaworks.redis.protocol;
  * @author Mark Paluch
  */
 public enum CommandType implements ProtocolKeyword {
+
     // Connection
 
     AUTH, ECHO, PING, QUIT, READONLY, READWRITE, SELECT, SWAPDB,
@@ -80,6 +81,10 @@ public enum CommandType implements ProtocolKeyword {
 
     // Geo
     GEOADD, GEORADIUS, GEORADIUS_RO, GEORADIUSBYMEMBER, GEORADIUSBYMEMBER_RO, GEOENCODE, GEODECODE, GEOPOS, GEODIST, GEOHASH,
+
+    // Stream
+
+    XADD, XRANGE, XLEN, XREAD,
 
     // Others
     TIME, WAIT,
