@@ -1544,6 +1544,11 @@ public abstract class AbstractRedisReactiveCommands<K, V> implements RedisHashRe
     }
 
     @Override
+    public Observable<Long> xlen(K key) {
+        return createObservable(() -> commandBuilder.xlen(key));
+    }
+
+    @Override
     public Observable<StreamMessage<K, V>> xrange(K key, Range<String> range) {
         return createDissolvingObservable(() -> commandBuilder.xrange(key, range, Limit.unlimited()));
     }

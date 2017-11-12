@@ -1537,6 +1537,11 @@ public abstract class AbstractRedisAsyncCommands<K, V> implements RedisHashesAsy
     }
 
     @Override
+    public RedisFuture<Long> xlen(K key) {
+        return dispatch(commandBuilder.xlen(key));
+    }
+
+    @Override
     public RedisFuture<List<StreamMessage<K, V>>> xrange(K key, Range<String> range) {
         return dispatch(commandBuilder.xrange(key, range, Limit.unlimited()));
     }
