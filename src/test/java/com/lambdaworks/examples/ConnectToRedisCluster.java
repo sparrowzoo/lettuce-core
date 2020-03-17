@@ -15,8 +15,12 @@
  */
 package com.lambdaworks.examples;
 
+import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.cluster.RedisClusterClient;
 import com.lambdaworks.redis.cluster.api.StatefulRedisClusterConnection;
+import com.lambdaworks.redis.codec.RedisCodec;
+
+import java.util.Arrays;
 
 /**
  * @author Mark Paluch
@@ -26,13 +30,15 @@ public class ConnectToRedisCluster {
     public static void main(String[] args) {
 
         // Syntax: redis://[password@]host[:port]
-        RedisClusterClient redisClient = RedisClusterClient.create("redis://password@localhost:7379");
+        RedisClusterClient redisClient = RedisClusterClient.create(Arrays.asList(RedisURI.create("redis://10.2.2.13:8030")));
 
-        StatefulRedisClusterConnection<String, String> connection = redisClient.connect();
+       // StatefulRedisClusterConnection<String, String> connection = redisClient.connect(new RedisCodec<String, Integer>() {
+       // });
 
-        System.out.println("Connected to Redis");
-
-        connection.close();
-        redisClient.shutdown();
+//        connection.async().set("test-cluster","ABC");
+//        System.out.println("Connected to Redis");
+//
+//        connection.close();
+//        redisClient.shutdown();
     }
 }
