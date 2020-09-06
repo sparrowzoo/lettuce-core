@@ -18,6 +18,8 @@ package com.lambdaworks.examples;
 import com.lambdaworks.redis.RedisClient;
 import com.lambdaworks.redis.api.StatefulRedisConnection;
 
+import java.util.Random;
+
 /**
  * @author Mark Paluch
  */
@@ -26,9 +28,26 @@ public class ConnectToRedisUsingRedisSentinel {
     public static void main(String[] args) {
 
         // Syntax: redis-sentinel://[password@]host[:port][,host2[:port2]][/databaseNumber]#sentinelMasterId
-        RedisClient redisClient = RedisClient.create("redis-sentinel://localhost:26379,localhost:26380/0#mymaster");
-
+        //192.168.2.18:26880,192.168.2.17:26880,192.168.2.18:26880
+        RedisClient redisClient = RedisClient.create("redis-sentinel://192.168.2.18:26880,192.168.2.17:26880,192.168.2.18:26880/0#gws");
         StatefulRedisConnection<String, String> connection = redisClient.connect();
+
+        int KEY_SIZE = 100;
+        int threadSize=128;
+        int LOOP=1000;
+        String keys[] = new String[KEY_SIZE];
+        String keys2[] = new String[KEY_SIZE];
+        for (int i = 0; i < KEY_SIZE; i++) {
+            keys[i] = String.format("{mc%s}:s-info-sku",(new Random().nextInt(64))%threadSize) +i + "" + new Random().nextInt(KEY_SIZE);
+            keys2[i] = "mc:s-info-sku" + i + "" + new Random().nextInt(KEY_SIZE);
+            connection.sync().set(keys[i], i + "");
+            connection.sync().set(keys2[i], i + "");
+        }
+        long t = System.currentTimeMillis();
+        for (int i = 0; i < LOOP; i++) {
+            connection.sync().mget(keys);
+        }
+        System.out.println(System.currentTimeMillis() - t);
 
         System.out.println("Connected to Redis using Redis Sentinel");
 
