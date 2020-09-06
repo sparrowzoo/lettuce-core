@@ -242,3 +242,13 @@ Contributing
 Github is for social coding: if you want to write code, I encourage contributions through pull requests from forks of this repository. 
 Create Github tickets for bugs and new features and comment on the ones that you are interested in and take a look into [CONTRIBUTING.md](https://github.com/lettuce-io/lettuce-core/blob/master/.github/CONTRIBUTING.md)
                   
+marge from origin apache
+---
+版本更新较大，不要合并
+```
+git remote add apache git@github.com:sparrowzoo/lettuce-core.git
+git remote update apache
+git pull apache master
+git rebase apache/master 不合并
+git push origin master
+```
