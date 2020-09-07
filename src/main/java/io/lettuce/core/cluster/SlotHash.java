@@ -123,7 +123,7 @@ public class SlotHash {
      * @result map between slot-hash and an ordered list of keys.
      *
      */
-    static <K, V> Map<Integer, List<K>> partition(RedisCodec<K, V> codec, Iterable<K> keys) {
+    public static <K, V> Map<Integer, List<K>> partition(RedisCodec<K, V> codec, Iterable<K> keys) {
 
         Map<Integer, List<K>> partitioned = new HashMap<>();
         for (K key : keys) {

@@ -20,7 +20,11 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
+import io.lettuce.core.support.LettuceCdiExtension;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 import reactor.core.publisher.Mono;
 import io.lettuce.core.internal.LettuceAssert;
 import io.lettuce.core.protocol.*;
@@ -38,6 +42,7 @@ import io.netty.util.Timer;
  * @author Mark Paluch
  */
 public class ConnectionBuilder {
+    private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(ConnectionBuilder.class);
 
     private Mono<SocketAddress> socketAddressSupplier;
 
@@ -242,6 +247,7 @@ public class ConnectionBuilder {
         private void doInitialize(Channel channel) {
 
             for (ChannelHandler handler : handlers.get()) {
+                LOGGER.info("channel-{}-handler-{}",channel,handler.getClass().getName());
                 channel.pipeline().addLast(handler);
             }
 

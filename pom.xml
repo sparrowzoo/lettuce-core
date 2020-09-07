@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.lettuce</groupId>
@@ -84,8 +85,8 @@
         <connection>scm:git:https://github.com/lettuce-io/lettuce-core.git</connection>
         <developerConnection>scm:git:https://github.com/lettuce-io/lettuce-core.git</developerConnection>
         <url>http://github.com/lettuce-io/lettuce-core</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <distributionManagement>
         <snapshotRepository>
@@ -102,7 +103,6 @@
 
     <dependencyManagement>
         <dependencies>
-
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-bom</artifactId>
@@ -172,6 +172,12 @@
             <artifactId>commons-pool2</artifactId>
             <version>${commons-pool.version}</version>
             <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.6</version>
         </dependency>
 
         <dependency>
@@ -687,389 +693,27 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <appendAssemblyId>false</appendAssemblyId>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
-
-    <profiles>
-
-        <profile>
-            <activation>
-                <os>
-                    <arch>aarch64</arch>
-                </os>
-            </activation>
-            <properties>
-                <os.detected.classifier>linux-aarch64-fedora</os.detected.classifier>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>ci</id>
-        </profile>
-
-        <profile>
-
-            <id>sonatype-oss-release</id>
-
-            <build>
-                <plugins>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <level>public</level>
-                            <author>true</author>
-                            <header>Lettuce</header>
-                            <stylesheetfile>src/main/javadoc/stylesheet.css</stylesheetfile>
-                            <links>
-                                <link>https://netty.io/4.1/api/</link>
-                                <link>https://commons.apache.org/proper/commons-pool/api-2.7.0/</link>
-                                <link>http://reactivex.io/RxJava/1.x/javadoc/</link>
-                                <link>http://reactivex.io/RxJava/javadoc/</link>
-                                <link>https://projectreactor.io/docs/core/release/api/</link>
-                                <link>https://docs.spring.io/spring/docs/current/javadoc-api/</link>
-                            </links>
-                            <doclint>none</doclint>
-                            <quiet>true</quiet>
-                            <tags>
-                                <tag>
-                                    <name>generated</name>
-                                    <placement>a</placement>
-                                    <head>Generated class:</head>
-                                </tag>
-                            </tags>
-                        </configuration>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>bin</id>
-                                <configuration>
-                                    <descriptors>
-                                        <descriptor>src/assembly/bin.xml</descriptor>
-                                    </descriptors>
-                                    <tarLongFileMode>gnu</tarLongFileMode>
-                                    <attach>false</attach>
-                                </configuration>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>net.nicoulaj.maven.plugins</groupId>
-                        <artifactId>checksum-maven-plugin</artifactId>
-                        <configuration>
-                            <algorithms>
-                                <algorithm>MD5</algorithm>
-                                <algorithm>SHA-1</algorithm>
-                            </algorithms>
-                        </configuration>
-
-                        <executions>
-                            <execution>
-                                <id>artifacts</id>
-                                <goals>
-                                    <goal>artifacts</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-
-                            <execution>
-                                <id>files</id>
-                                <goals>
-                                    <goal>files</goal>
-                                </goals>
-                                <phase>package</phase>
-                                <configuration>
-                                    <fileSets>
-                                        <fileSet>
-                                            <directory>${project.build.directory}</directory>
-                                            <includes>
-                                                <include>*.gz</include>
-                                                <include>*.zip</include>
-                                            </includes>
-                                        </fileSet>
-                                    </fileSets>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-
-            <id>jmh</id>
-
-            <dependencies>
-                <dependency>
-                    <groupId>org.openjdk.jmh</groupId>
-                    <artifactId>jmh-core</artifactId>
-                    <version>1.21</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.openjdk.jmh</groupId>
-                    <artifactId>jmh-generator-annprocess</artifactId>
-                    <version>1.21</version>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-source</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>add-test-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>src/test/jmh</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>run-benchmarks</id>
-                                <phase>test</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <executable>java</executable>
-                                    <classpathScope>test</classpathScope>
-                                    <arguments>
-                                        <argument>-Xmx2G</argument>
-                                        <argument>-classpath</argument>
-                                        <classpath />
-                                        <argument>org.openjdk.jmh.Main</argument>
-                                        <argument>.*</argument>
-                                        <argument>-tu</argument>
-                                        <argument>ns</argument>
-                                        <argument>-f</argument>
-                                        <argument>1</argument>
-                                        <argument>-wi</argument>
-                                        <argument>10</argument>
-                                        <argument>-w</argument>
-                                        <argument>1</argument>
-                                        <argument>-r</argument>
-                                        <argument>1</argument>
-                                        <argument>-i</argument>
-                                        <argument>10</argument>
-                                        <argument>-bm</argument>
-                                        <argument>avgt</argument>
-                                    </arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-
-            <id>no-install</id>
-
-            <properties>
-                <maven.install.skip>true</maven.install.skip>
-                <skipTests>true</skipTests>
-            </properties>
-
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-install-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                            <uniqueVersion>false</uniqueVersion>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-
-            <id>documentation</id>
-
-            <build>
-
-                <plugins>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <executions>
-
-                            <execution>
-                                <id>rename-reference-docs</id>
-                                <phase>process-resources</phase>
-                                <configuration>
-                                    <target>
-                                        <copy failonerror="false" file="${project.build.directory}/generated-docs/index.pdf" tofile="target/site/reference/pdf/lettuce-reference.pdf" />
-                                    </target>
-                                </configuration>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                            </execution>
-
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.asciidoctor</groupId>
-                        <artifactId>asciidoctor-maven-plugin</artifactId>
-                        <version>2.0.0-RC.1</version>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.asciidoctor</groupId>
-                                <artifactId>asciidoctorj-pdf</artifactId>
-                                <version>1.5.0-beta.5</version>
-                            </dependency>
-                        </dependencies>
-                        <executions>
-
-                            <execution>
-                                <id>html</id>
-                                <phase>generate-resources</phase>
-                                <goals>
-                                    <goal>process-asciidoc</goal>
-                                </goals>
-                                <configuration>
-                                    <backend>html5</backend>
-                                    <outputDirectory>${project.build.directory}/site/reference/html
-                                    </outputDirectory>
-                                    <doctype>book</doctype>
-                                    <attributes>
-                                        <linkcss>true</linkcss>
-                                        <sectanchors>true</sectanchors>
-                                        <stylesdir>stylesheets</stylesdir>
-                                        <stylesheet>golo.css</stylesheet>
-                                    </attributes>
-                                </configuration>
-                            </execution>
-
-                            <execution>
-                                <id>pdf</id>
-                                <phase>generate-resources</phase>
-                                <goals>
-                                    <goal>process-asciidoc</goal>
-                                </goals>
-                                <configuration>
-                                    <backend>pdf</backend>
-                                </configuration>
-                            </execution>
-
-                        </executions>
-
-                        <configuration>
-                            <sourceDirectory>src/main/asciidoc</sourceDirectory>
-                            <sourceDocumentName>index.asciidoc</sourceDocumentName>
-                            <doctype>book</doctype>
-                            <attributes>
-                                <version>${project.version}</version>
-                                <allow-uri-read>true</allow-uri-read>
-                                <toclevels>3</toclevels>
-                                <numbered>true</numbered>
-                                <ext-doc>https://raw.githubusercontent.com/wiki/lettuce-io/lettuce-core/</ext-doc>
-                                <allow-uri-read />
-                                <docinfo />
-                                <toc2 />
-                                <icons>font</icons>
-                                <source-highlighter>coderay</source-highlighter>
-                            </attributes>
-                        </configuration>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>docs</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                                <configuration>
-                                    <descriptors>
-                                        <descriptor>src/assembly/docs.xml</descriptor>
-                                    </descriptors>
-                                    <tarLongFileMode>gnu</tarLongFileMode>
-                                    <attach>true</attach>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                </plugins>
-            </build>
-        </profile>
-
-    </profiles>
 
 </project>

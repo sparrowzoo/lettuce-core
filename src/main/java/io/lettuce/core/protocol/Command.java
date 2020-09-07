@@ -15,9 +15,12 @@
  */
 package io.lettuce.core.protocol;
 
+import io.lettuce.core.AbstractRedisClient;
 import io.lettuce.core.internal.LettuceAssert;
 import io.lettuce.core.output.CommandOutput;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * A Redis command with a {@link ProtocolKeyword command type}, {@link CommandArgs arguments} and an optional
@@ -31,6 +34,8 @@ import io.netty.buffer.ByteBuf;
  * @author Mark Paluch
  */
 public class Command<K, V, T> implements RedisCommand<K, V, T> {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(Command.class);
+
 
     protected static final byte ST_INITIAL = 0;
 
@@ -79,6 +84,7 @@ public class Command<K, V, T> implements RedisCommand<K, V, T> {
      */
     @Override
     public CommandOutput<K, V, T> getOutput() {
+        //logger.info("content-{} getoutput {}",output.get(),Thread.currentThread().getName());
         return output;
     }
 
@@ -97,11 +103,14 @@ public class Command<K, V, T> implements RedisCommand<K, V, T> {
      */
     @Override
     public void complete() {
+        //logger.info("complete {}",Thread.currentThread().getName());
         this.status = ST_COMPLETED;
     }
 
     @Override
     public void cancel() {
+        logger.info("cancel {}",Thread.currentThread().getName());
+
         this.status = ST_CANCELLED;
     }
 

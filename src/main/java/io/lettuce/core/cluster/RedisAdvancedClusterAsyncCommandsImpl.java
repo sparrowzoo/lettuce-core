@@ -37,6 +37,8 @@ import io.lettuce.core.api.async.RedisScriptingAsyncCommands;
 import io.lettuce.core.api.async.RedisServerAsyncCommands;
 import io.lettuce.core.cluster.ClusterScanSupport.ScanCursorMapper;
 import io.lettuce.core.cluster.api.NodeSelectionSupport;
+import io.lettuce.core.cluster.api.PipelinedMget;
+import io.lettuce.core.cluster.api.PipelinedMgetProvider;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.api.async.AsyncNodeSelection;
 import io.lettuce.core.cluster.api.async.NodeSelectionAsyncCommands;
@@ -71,7 +73,7 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
      * Initialize a new connection.
      *
      * @param connection the stateful connection
-     * @param codec Codec used to encode/decode keys and values.
+     * @param codec      Codec used to encode/decode keys and values.
      * @deprecated since 5.1, use {@link #RedisAdvancedClusterAsyncCommandsImpl(StatefulRedisClusterConnection, RedisCodec)}.
      */
     @Deprecated
@@ -84,7 +86,7 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
      * Initialize a new connection.
      *
      * @param connection the stateful connection
-     * @param codec Codec used to encode/decode keys and values.
+     * @param codec      Codec used to encode/decode keys and values.
      */
     public RedisAdvancedClusterAsyncCommandsImpl(StatefulRedisClusterConnection<K, V> connection, RedisCodec<K, V> codec) {
         super(connection, codec);
@@ -231,7 +233,7 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
 
     @Override
     public RedisFuture<List<GeoWithin<V>>> georadius(K key, double longitude, double latitude, double distance,
-            GeoArgs.Unit unit, GeoArgs geoArgs) {
+                                                     GeoArgs.Unit unit, GeoArgs geoArgs) {
 
         if (hasRedisState() && getRedisState().hasCommand(CommandType.GEORADIUS_RO)) {
             return super.georadius_ro(key, longitude, latitude, distance, unit, geoArgs);
@@ -252,7 +254,7 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
 
     @Override
     public RedisFuture<List<GeoWithin<V>>> georadiusbymember(K key, V member, double distance, GeoArgs.Unit unit,
-            GeoArgs geoArgs) {
+                                                             GeoArgs geoArgs) {
 
         if (hasRedisState() && getRedisState().hasCommand(CommandType.GEORADIUSBYMEMBER_RO)) {
             return super.georadiusbymember_ro(key, member, distance, unit, geoArgs);
@@ -277,7 +279,6 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
 
     @Override
     public RedisFuture<Long> keys(KeyStreamingChannel<K> channel, K pattern) {
-
         Map<String, CompletableFuture<Long>> executions = executeOnUpstream(commands -> commands.keys(channel, pattern));
         return MultiNodeExecution.aggregateAsync(executions);
     }
@@ -289,12 +290,16 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
 
     @Override
     public RedisFuture<List<KeyValue<K, V>>> mget(Iterable<K> keys) {
-        Map<Integer, List<K>> partitioned = SlotHash.partition(codec, keys);
 
+        //map between slot-hash and an ordered list of keys.
+        //每个slot的key 列表
+        Map<Integer, List<K>> partitioned = SlotHash.partition(codec, keys);
         if (partitioned.size() < 2) {
             return super.mget(keys);
         }
 
+        //mapping between the Key and hash slot.
+        //每个 key对应的hash slot
         Map<K, Integer> slots = SlotHash.getSlots(partitioned);
         Map<Integer, RedisFuture<List<KeyValue<K, V>>>> executions = new HashMap<>();
 
@@ -504,12 +509,12 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
     }
 
     private CompletableFuture<RedisClusterAsyncCommands<K, V>> getConnectionAsync(String nodeId) {
-        return getConnectionProvider().<K, V> getConnectionAsync(ClusterConnectionProvider.Intent.WRITE, nodeId)
+        return getConnectionProvider().<K, V>getConnectionAsync(ClusterConnectionProvider.Intent.WRITE, nodeId)
                 .thenApply(StatefulRedisConnection::async);
     }
 
     private CompletableFuture<RedisClusterAsyncCommands<K, V>> getConnectionAsync(String host, int port) {
-        return getConnectionProvider().<K, V> getConnectionAsync(ClusterConnectionProvider.Intent.WRITE, host, port)
+        return getConnectionProvider().<K, V>getConnectionAsync(ClusterConnectionProvider.Intent.WRITE, host, port)
                 .thenApply(StatefulRedisConnection::async);
     }
 
@@ -535,7 +540,7 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
 
     @SuppressWarnings("unchecked")
     protected AsyncNodeSelection<K, V> nodes(Predicate<RedisClusterNode> predicate, ClusterConnectionProvider.Intent intent,
-            boolean dynamic) {
+                                             boolean dynamic) {
 
         NodeSelectionSupport<RedisAsyncCommands<K, V>, ?> selection;
 
@@ -551,7 +556,7 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
         NodeSelectionInvocationHandler h = new NodeSelectionInvocationHandler((AbstractNodeSelection<?, ?, ?, ?>) selection,
                 RedisClusterAsyncCommands.class, ASYNC);
         return (AsyncNodeSelection<K, V>) Proxy.newProxyInstance(NodeSelectionSupport.class.getClassLoader(),
-                new Class<?>[] { NodeSelectionAsyncCommands.class, AsyncNodeSelection.class }, h);
+                new Class<?>[]{NodeSelectionAsyncCommands.class, AsyncNodeSelection.class}, h);
     }
 
     @Override
@@ -601,8 +606,8 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
     }
 
     private <T extends ScanCursor> RedisFuture<T> clusterScan(ScanCursor cursor,
-            BiFunction<RedisKeyAsyncCommands<K, V>, ScanCursor, RedisFuture<T>> scanFunction,
-            ScanCursorMapper<RedisFuture<T>> resultMapper) {
+                                                              BiFunction<RedisKeyAsyncCommands<K, V>, ScanCursor, RedisFuture<T>> scanFunction,
+                                                              ScanCursorMapper<RedisFuture<T>> resultMapper) {
 
         return clusterScan(getStatefulConnection(), cursor, scanFunction, resultMapper);
     }
@@ -611,7 +616,7 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
      * Run a command on all available masters,
      *
      * @param function function producing the command
-     * @param <T> result type
+     * @param <T>      result type
      * @return map of a key (counter) and commands.
      */
     protected <T> Map<String, CompletableFuture<T>> executeOnUpstream(
@@ -623,8 +628,8 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
      * Run a command on all available nodes that match {@code filter}.
      *
      * @param function function producing the command
-     * @param filter filter function for the node selection
-     * @param <T> result type
+     * @param filter   filter function for the node selection
+     * @param <T>      result type
      * @return map of a key (counter) and commands.
      */
     protected <T> Map<String, CompletableFuture<T>> executeOnNodes(
@@ -671,11 +676,10 @@ public class RedisAdvancedClusterAsyncCommandsImpl<K, V> extends AbstractRedisAs
 
     /**
      * Perform a SCAN in the cluster.
-     *
      */
     static <T extends ScanCursor, K, V> RedisFuture<T> clusterScan(StatefulRedisClusterConnection<K, V> connection,
-            ScanCursor cursor, BiFunction<RedisKeyAsyncCommands<K, V>, ScanCursor, RedisFuture<T>> scanFunction,
-            ScanCursorMapper<RedisFuture<T>> mapper) {
+                                                                   ScanCursor cursor, BiFunction<RedisKeyAsyncCommands<K, V>, ScanCursor, RedisFuture<T>> scanFunction,
+                                                                   ScanCursorMapper<RedisFuture<T>> mapper) {
 
         List<String> nodeIds = ClusterScanSupport.getNodeIds(connection, cursor);
         String currentNodeId = ClusterScanSupport.getCurrentNodeId(cursor, nodeIds);
