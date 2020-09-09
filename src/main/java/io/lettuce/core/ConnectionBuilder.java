@@ -247,7 +247,7 @@ public class ConnectionBuilder {
         private void doInitialize(Channel channel) {
 
             for (ChannelHandler handler : handlers.get()) {
-                LOGGER.info("channel-{}-handler-{}",channel,handler.getClass().getName());
+                LOGGER.debug("channel-{}-handler-{}", channel, handler.getClass().getName());
                 channel.pipeline().addLast(handler);
             }
 

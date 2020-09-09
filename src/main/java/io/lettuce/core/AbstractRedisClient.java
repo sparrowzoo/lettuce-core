@@ -365,6 +365,7 @@ public abstract class AbstractRedisClient {
         redisBootstrap.handler(initializer);
 
         clientResources.nettyCustomizer().afterBootstrapInitialized(redisBootstrap);
+        logger.info("redis address {}",redisAddress);
         ChannelFuture connectFuture = redisBootstrap.connect(redisAddress);
 
         channelReadyFuture.whenComplete((c, t) -> {
@@ -394,8 +395,7 @@ public abstract class AbstractRedisClient {
             handshakeHandler.channelInitialized().whenComplete((success, throwable) -> {
 
                 if (throwable == null) {
-
-                    logger.debug("Connecting to Redis at {}: Success", redisAddress);
+                    logger.info("Connecting to Redis at {}: Success", redisAddress);
                     RedisChannelHandler<?, ?> connection = connectionBuilder.connection();
                     connection.registerCloseables(closeableResources, connection);
                     channelReadyFuture.complete(connectFuture.channel());

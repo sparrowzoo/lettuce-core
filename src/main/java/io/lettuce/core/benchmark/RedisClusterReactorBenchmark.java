@@ -15,6 +15,7 @@
  */
 package io.lettuce.core.benchmark;
 
+import io.lettuce.core.KeyValue;
 import io.lettuce.core.api.reactive.RedisStringReactiveCommands;
 import io.lettuce.core.cluster.ClusterClientOptions;
 import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
@@ -22,19 +23,23 @@ import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.codec.CRC16;
 import org.apache.commons.io.FileUtils;
+import reactor.core.publisher.Flux;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * @author Mark Paluch
  */
-public class RedisClusterBenchmark {
+public class RedisClusterReactorBenchmark {
     static int KEY_COUNT = 500;
     static int THREAD_SIZE = 1;
     static int LOOP = 100;
@@ -58,7 +63,7 @@ public class RedisClusterBenchmark {
         executorService = Executors.newFixedThreadPool(THREAD_SIZE);
         // Syntax: redis://[password@]host[:port]
         String redisIpPorts = "192.168.2.10:9000,192.168.2.14:9000,192.168.2.13:9000";
-        //redisIpPorts = "10.197.97.16:8001,10.197.97.17:8002,10.197.97.18:8001,10.197.97.16:8002,10.197.97.17:8001,10.197.97.18:8002";
+        redisIpPorts = "10.197.97.16:8001,10.197.97.17:8002,10.197.97.18:8001,10.197.97.16:8002,10.197.97.17:8001,10.197.97.18:8002";
         RedisClusterClient redisClient = RedisClusterClient.create("redis://" + redisIpPorts);
         ClusterTopologyRefreshOptions clusterTopologyRefreshOptions = ClusterTopologyRefreshOptions.builder()//
                 .enablePeriodicRefresh(10, TimeUnit.HOURS)//
@@ -88,19 +93,16 @@ public class RedisClusterBenchmark {
             keys2[i] = "mc:s-info-sku" + i + "" + new Random().nextInt(KEY_COUNT);
             connection.sync().set(keys[i], fixedLengthString);
             connection.sync().set(keys2[i], fixedLengthString);
-
-            //Mono<String> set = reactive.set("key", "value");
-            //Mono<String> get = reactive.get("key");
-            //set.subscribe();
-            //System.out.println(get.block());
         }
-        //Mono<String> set = reactive.set("key", "value");
-        //Flux<KeyValue<String, String>> get = reactive.mget(keys);
-        //set.subscribe();
-//        get.subscribe(keyValues -> {
-//            System.out.println("end");
-//            System.out.println(keyValues);
-//        });
+
+
+        Flux<KeyValue<String, String>> get = reactive.mget(keys);
+        System.out.println("current thread" + Thread.currentThread().getId());
+        get.collectList().subscribe(keyValues -> {
+            System.out.println(keyValues);
+            System.out.println("call back thread" + Thread.currentThread().getId());
+        });
+        System.out.println("return thread "+Thread.currentThread().getId());
 
         StringBuilder benchmark = new StringBuilder();
         PartitionSlotDistribution slotDistribution = BenchmarkUtils.getPartitionSlotDistribution(redisClient.getPartitions(), hashTagKeys);
@@ -111,16 +113,14 @@ public class RedisClusterBenchmark {
                 benchmark.append("slot-" + slot + ",key-size-" + slotDistribution.getPartitioned().get(slot).size() + "\n");
             }
         }
-        TopPercentile tp2 = BenchmarkUtils.benchmark(redisClient, keys2, executorService, THREAD_SIZE, LOOP);
-        TopPercentile tp1 = BenchmarkUtils.benchmark(redisClient, keys, executorService, THREAD_SIZE, LOOP);
+        TopPercentile tp2 = BenchmarkUtils.benchmarkReactor(redisClient, keys2, executorService, THREAD_SIZE, LOOP);
+        TopPercentile tp1 = BenchmarkUtils.benchmarkReactor(redisClient, keys, executorService, THREAD_SIZE, LOOP);
         benchmark.append("hash-tag--" + tp1 + "\n");
         benchmark.append("non-hash-tag--" + tp2 + "\n");
         System.out.println(benchmark.toString());
 
-        String fileName = String.format("./redis-benchmark-keycount%s-threadsize%s-loop%s-slotsize%s-keylength%s", KEY_COUNT, THREAD_SIZE, LOOP, SLOT_SIZE, KEY_LENGTH);
+        String fileName = String.format("./redis-reactor-benchmark-keycount%s-threadsize%s-loop%s-slotsize%s-keylength%s", KEY_COUNT, THREAD_SIZE, LOOP, SLOT_SIZE, KEY_LENGTH);
         FileUtils.write(new File(fileName), benchmark.toString(), Charset.defaultCharset());
-        redisClient.shutdown();
-        System.in.read();
     }
 }
 

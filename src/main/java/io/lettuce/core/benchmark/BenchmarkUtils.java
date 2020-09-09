@@ -1,13 +1,12 @@
 package io.lettuce.core.benchmark;
 
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.KeyValue;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.SlotHash;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.models.partitions.Partitions;
-import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.codec.StringCodec;
+import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,12 +24,20 @@ public class BenchmarkUtils {
         int topPercentile = 0;
         for (Integer key : tp.keySet()) {
             current = current + tp.get(key).get();
+            topPercentile = key;
             if (current > position) {
-                topPercentile = key;
                 break;
             }
         }
         return topPercentile;
+    }
+
+    public static String generateFixedLengthString(int length) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            sb.append("a");
+        }
+        return sb.toString();
     }
 
     public static int testTopPercentile() {
@@ -62,7 +69,7 @@ public class BenchmarkUtils {
     public static TopPercentile benchmark(RedisClusterClient redisClusterClient, String[] keys, ExecutorService executorService, int threadSize, int loop) throws InterruptedException {
         ConcurrentSkipListMap<Integer, AtomicInteger> tpMap = new ConcurrentSkipListMap<>();
         long t = System.currentTimeMillis();
-        AtomicInteger sampleCount=new AtomicInteger(0);
+        AtomicInteger sampleCount = new AtomicInteger(0);
         CountDownLatch countDownLatch = new CountDownLatch(threadSize);
         for (int ti = 0; ti < threadSize; ti++) {
             StatefulRedisClusterConnection connection = redisClusterClient.connect();
@@ -94,6 +101,47 @@ public class BenchmarkUtils {
         topPercentile.setSum((int) (System.currentTimeMillis() - t));
         return topPercentile;
     }
+
+
+    public static TopPercentile benchmarkReactor(RedisClusterClient redisClusterClient, String[] keys, ExecutorService executorService, int threadSize, int loop) throws InterruptedException {
+        ConcurrentSkipListMap<Integer, AtomicInteger> tpMap = new ConcurrentSkipListMap<>();
+        long t = System.currentTimeMillis();
+        AtomicInteger sampleCount = new AtomicInteger(0);
+        CountDownLatch countDownLatch = new CountDownLatch(threadSize);
+        List<StatefulRedisClusterConnection> connections = new ArrayList<>();
+        for (int ti = 0; ti < threadSize; ti++) {
+            StatefulRedisClusterConnection connection = redisClusterClient.connect();
+            connections.add(connection);
+            executorService.submit(() -> {
+                for (int i = 0; i < loop; i++) {
+                    long t1 = System.currentTimeMillis();
+                    try {
+                        Flux<KeyValue<String, String>> flux = connection.reactive().mget(keys);
+                        flux.collectList().subscribe(stringStringKeyValue -> {
+                            Integer cost = (int) (System.currentTimeMillis() - t1);
+                            if (!tpMap.containsKey(cost)) {
+                                tpMap.put(cost, new AtomicInteger(0));
+                            }
+                            tpMap.get(cost).incrementAndGet();
+                            countDownLatch.countDown();
+                        });
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    } finally {
+                        sampleCount.incrementAndGet();
+                    }
+                }
+            });
+        }
+        countDownLatch.await();
+        for (StatefulRedisClusterConnection connection : connections) {
+            connection.close();
+        }
+        TopPercentile topPercentile = getTopPercentile(tpMap);
+        topPercentile.setSum((int) (System.currentTimeMillis() - t));
+        return topPercentile;
+    }
+
 
     public static PartitionSlotDistribution getPartitionSlotDistribution(Partitions partitions, List<String> keys) {
         Map<String, List<Integer>> partitionSlotMap = new HashMap<>();

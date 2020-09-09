@@ -68,14 +68,15 @@ class DefaultClusterTopologyRefresh implements ClusterTopologyRefresh {
      * Load partition views from a collection of {@link RedisURI}s and return the view per {@link RedisURI}. Partitions contain
      * an ordered list of {@link RedisClusterNode}s. The sort key is latency. Nodes with lower latency come first.
      *
-     * @param seed collection of {@link RedisURI}s
+     * @param seed           collection of {@link RedisURI}s
      * @param connectTimeout connect timeout
-     * @param discovery {@code true} to discover additional nodes
+     * @param discovery      {@code true} to discover additional nodes
      * @return mapping between {@link RedisURI} and {@link Partitions}
      */
     public CompletionStage<Map<RedisURI, Partitions>> loadViews(Iterable<RedisURI> seed, Duration connectTimeout,
-            boolean discovery) {
+                                                                boolean discovery) {
 
+        logger.info("load topology ....");
         if (!isEventLoopActive()) {
             return CompletableFuture.completedFuture(Collections.emptyMap());
         }
@@ -317,7 +318,7 @@ class DefaultClusterTopologyRefresh implements ClusterTopologyRefresh {
                 }, timeout, timeUnit);
 
                 connectionFuture.whenComplete((connection, throwable) -> {
-
+                    logger.info("partition connection ...{}", connection);
                     cancelTimeout.cancel();
 
                     if (throwable != null) {
@@ -342,6 +343,7 @@ class DefaultClusterTopologyRefresh implements ClusterTopologyRefresh {
 
                         // avoid leaking resources
                         if (!sync.complete(connection)) {
+                            logger.info("connection close");
                             connection.close();
                         }
                     }
@@ -363,7 +365,7 @@ class DefaultClusterTopologyRefresh implements ClusterTopologyRefresh {
 
     private static Set<RedisURI> difference(Set<RedisURI> allKnown, Set<RedisURI> seed) {
 
-       Set<RedisURI> result = new TreeSet<>(TopologyComparators.RedisURIComparator.INSTANCE);
+        Set<RedisURI> result = new TreeSet<>(TopologyComparators.RedisURIComparator.INSTANCE);
 
         for (RedisURI e : allKnown) {
             if (!seed.contains(e)) {
@@ -404,14 +406,19 @@ class DefaultClusterTopologyRefresh implements ClusterTopologyRefresh {
         public void addConnection(RedisURI uri, CompletableFuture<StatefulRedisConnection<String, String>> future) {
             CompletableFuture<StatefulRedisConnection<String, String>> existing = connections.put(uri, future);
 
-            if(existing != null){
+            if (existing != null) {
                 System.out.println("faiiil!1");
             }
         }
 
         @SuppressWarnings("rawtypes")
         public CompletableFuture<Void> close() {
-
+            logger.info("cluster topology close waiting for 5000s", DefaultClusterTopologyRefresh.class);
+            try {
+                Thread.sleep(5000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             CompletableFuture[] futures = connections.values().stream()
                     .map(it -> it.thenCompose(StatefulConnection::closeAsync).exceptionally(ignore -> null))
                     .toArray(CompletableFuture[]::new);

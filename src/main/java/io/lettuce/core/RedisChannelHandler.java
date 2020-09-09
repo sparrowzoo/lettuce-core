@@ -130,7 +130,7 @@ public abstract class RedisChannelHandler<K, V> implements Closeable, Connection
     public CompletableFuture<Void> closeAsync() {
 
         if (debugEnabled) {
-            logger.debug("closeAsync()");
+            logger.info("closeAsync()");
         }
 
         if (CLOSED.get(this) == ST_CLOSED) {
@@ -224,7 +224,9 @@ public abstract class RedisChannelHandler<K, V> implements Closeable, Connection
 
         addListener(resource -> {
             for (Closeable closeable : closeables) {
+
                 if (closeable == RedisChannelHandler.this) {
+                    logger.info("closeable {}",RedisChannelHandler.class);
                     continue;
                 }
 
@@ -232,6 +234,7 @@ public abstract class RedisChannelHandler<K, V> implements Closeable, Connection
                     if (closeable instanceof AsyncCloseable) {
                         ((AsyncCloseable) closeable).closeAsync();
                     } else {
+                        logger.info("resource close {}",closeable);
                         closeable.close();
                     }
                 } catch (IOException e) {
