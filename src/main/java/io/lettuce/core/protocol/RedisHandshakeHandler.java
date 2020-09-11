@@ -26,6 +26,8 @@ import io.lettuce.core.resource.ClientResources;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.Timeout;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * Handler to initialize a Redis Connection using a {@link ConnectionInitializer}.
@@ -34,6 +36,7 @@ import io.netty.util.Timeout;
  * @since 6.0
  */
 public class RedisHandshakeHandler extends ChannelInboundHandlerAdapter {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(RedisHandshakeHandler.class);
 
     private final ConnectionInitializer connectionInitializer;
 
@@ -52,6 +55,7 @@ public class RedisHandshakeHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        logger.info("channel registered {},thread-name {}",ctx.channel(),Thread.currentThread().getName());
 
         Runnable timeoutGuard = () -> {
 

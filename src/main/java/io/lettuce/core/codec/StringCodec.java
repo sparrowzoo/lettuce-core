@@ -15,15 +15,17 @@
  */
 package io.lettuce.core.codec;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.*;
-
 import io.lettuce.core.internal.LettuceAssert;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.util.CharsetUtil;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.*;
 
 /**
  * Optimized String codec. This {@link RedisCodec} encodes and decodes {@link String} keys and values using a specified
@@ -34,6 +36,9 @@ import io.netty.util.CharsetUtil;
  * @since 4.3
  */
 public class StringCodec implements RedisCodec<String, String>, ToByteBufEncoder<String, String> {
+
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(StringCodec.class);
+
 
     public static final StringCodec UTF8 = new StringCodec(StandardCharsets.UTF_8);
 
@@ -112,7 +117,12 @@ public class StringCodec implements RedisCodec<String, String>, ToByteBufEncoder
 
     @Override
     public String decodeValue(ByteBuffer bytes) {
-        return Unpooled.wrappedBuffer(bytes).toString(charset);
+        String value=Unpooled.wrappedBuffer(bytes).toString(charset);
+        if(value.equalsIgnoreCase("a")){
+            System.out.println("debug");
+        }
+        LOG.info("decode value thread-name:{} value={}",Thread.currentThread().getName(),value);
+        return value;
     }
 
     @Override

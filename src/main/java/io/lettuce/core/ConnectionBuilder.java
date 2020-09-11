@@ -100,7 +100,6 @@ public class ConnectionBuilder {
         handlers.add(new CommandEncoder());
         handlers.add(getHandshakeHandler());
         handlers.add(commandHandlerSupplier.get());
-
         handlers.add(new ConnectionEventTrigger(connectionEvents, connection, clientResources.eventBus()));
 
         if (clientOptions.isAutoReconnect()) {
@@ -247,7 +246,7 @@ public class ConnectionBuilder {
         private void doInitialize(Channel channel) {
 
             for (ChannelHandler handler : handlers.get()) {
-                LOGGER.debug("channel-{}-handler-{}", channel, handler.getClass().getName());
+                LOGGER.info("channel-{}-handler-{}", channel, handler.getClass().getName());
                 channel.pipeline().addLast(handler);
             }
 

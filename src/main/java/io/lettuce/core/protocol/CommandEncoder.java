@@ -72,6 +72,8 @@ public class CommandEncoder extends MessageToByteEncoder<Object> {
     @SuppressWarnings("unchecked")
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
 
+        logger.info("redis encode {} thread-id-{}", msg,Thread.currentThread().getId());
+
         out.touch("CommandEncoder.encode(…)");
         if (msg instanceof RedisCommand) {
             RedisCommand<?, ?, ?> command = (RedisCommand<?, ?, ?>) msg;

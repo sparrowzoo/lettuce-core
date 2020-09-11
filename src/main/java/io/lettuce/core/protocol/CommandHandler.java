@@ -117,12 +117,12 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
     /**
      * Initialize a new instance that handles commands from the supplied queue.
      *
-     * @param clientOptions client options for this connection, must not be {@code null}
+     * @param clientOptions   client options for this connection, must not be {@code null}
      * @param clientResources client resources for this connection, must not be {@code null}
-     * @param endpoint must not be {@code null}.
+     * @param endpoint        must not be {@code null}.
      */
     public CommandHandler(ClientOptions clientOptions, ClientResources clientResources, Endpoint endpoint) {
-
+        logger.info("init new command handler thread-name {}", Thread.currentThread().getName());
         LettuceAssert.notNull(clientOptions, "ClientOptions must not be null");
         LettuceAssert.notNull(clientResources, "ClientResources must not be null");
         LettuceAssert.notNull(endpoint, "RedisEndpoint must not be null");
@@ -175,7 +175,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
 
         if (isClosed()) {
-            logger.debug("{} Dropping register for a closed channel", logPrefix());
+            logger.info("{} Dropping register for a closed channel", logPrefix());
         }
 
         channel = ctx.channel();
@@ -287,7 +287,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
 
         if (debugEnabled) {
-            logger.debug("{} channelActive()", logPrefix());
+            logger.info("{} channelActive()", logPrefix());
         }
 
         setState(LifecycleState.CONNECTED);
@@ -351,7 +351,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
 
     /**
      * @see io.netty.channel.ChannelDuplexHandler#write(io.netty.channel.ChannelHandlerContext, java.lang.Object,
-     *      io.netty.channel.ChannelPromise)
+     * io.netty.channel.ChannelPromise)
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -387,11 +387,15 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
 
     private void writeSingleCommand(ChannelHandlerContext ctx, RedisCommand<?, ?, ?> command, ChannelPromise promise) {
 
+        if (command.getType().name().equalsIgnoreCase("GET")) {
+            logger.info("write single command {}", command.getType());
+        }
         if (!isWriteable(command)) {
             promise.trySuccess();
             return;
         }
 
+        logger.info("add stack command {} promise {}",command,promise);
         addToStack(command, promise);
 
         if (tracingEnabled && command instanceof CompleteableCommand) {
@@ -578,6 +582,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
         }
 
         while (canDecode(buffer)) {
+            logger.info("can decode thread-name {}", Thread.currentThread().getName());
 
             if (isPushDecode(buffer)) {
 
@@ -792,6 +797,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
     }
 
     protected boolean decode(ByteBuf buffer, RedisCommand<?, ?, ?> command, CommandOutput<?, ?, ?> output) {
+        logger.info("command decode thread-name{}", Thread.currentThread().getName());
         return rsm.decode(buffer, output, command::completeExceptionally);
     }
 

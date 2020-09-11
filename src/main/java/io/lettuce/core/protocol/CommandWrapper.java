@@ -59,6 +59,7 @@ public class CommandWrapper<K, V, T> implements RedisCommand<K, V, T>, Completea
         command.complete();
 
         Object[] consumers = ONCOMPLETE.get(this);
+
         if (!expireCallbacks(consumers)) {
             return;
         }

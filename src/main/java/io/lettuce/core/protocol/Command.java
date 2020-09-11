@@ -15,7 +15,6 @@
  */
 package io.lettuce.core.protocol;
 
-import io.lettuce.core.AbstractRedisClient;
 import io.lettuce.core.internal.LettuceAssert;
 import io.lettuce.core.output.CommandOutput;
 import io.netty.buffer.ByteBuf;

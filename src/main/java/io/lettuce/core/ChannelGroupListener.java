@@ -21,10 +21,13 @@ import static io.lettuce.core.ConnectionEventTrigger.remote;
 import io.lettuce.core.event.EventBus;
 import io.lettuce.core.event.connection.ConnectedEvent;
 import io.lettuce.core.event.connection.DisconnectedEvent;
+import io.lettuce.core.protocol.CommandEncoder;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.group.ChannelGroup;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * A netty {@link ChannelHandler} responsible for monitoring the channel and adding/removing the channel from/to the
@@ -34,6 +37,7 @@ import io.netty.channel.group.ChannelGroup;
  * @author Mark Paluch
  */
 class ChannelGroupListener extends ChannelInboundHandlerAdapter {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ChannelGroupListener.class);
 
     private final ChannelGroup channels;
 
@@ -47,6 +51,7 @@ class ChannelGroupListener extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         eventBus.publish(new ConnectedEvent(local(ctx), remote(ctx)));
+        logger.info("add channels {},thread-name {}", ctx.channel(),Thread.currentThread().getName());
         channels.add(ctx.channel());
         super.channelActive(ctx);
     }
