@@ -387,7 +387,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
 
     private void writeSingleCommand(ChannelHandlerContext ctx, RedisCommand<?, ?, ?> command, ChannelPromise promise) {
 
-        if (command.getType().name().equalsIgnoreCase("GET")) {
+        if (command.getType().name().equalsIgnoreCase("get")) {
             logger.info("write single command {}", command.getType());
         }
         if (!isWriteable(command)) {
@@ -395,7 +395,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
             return;
         }
 
-        logger.info("add stack command {} promise {}",command,promise);
+        logger.info("add stack command {} promise {}", command, promise);
         addToStack(command, promise);
 
         if (tracingEnabled && command instanceof CompleteableCommand) {
@@ -609,6 +609,9 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
             } else {
 
                 RedisCommand<?, ?, ?> command = stack.peek();
+                if (command.getType().name().equalsIgnoreCase("mget")) {
+                    logger.info("mget callback args {},thread-name {}", command.getArgs(), Thread.currentThread().getName());
+                }
                 if (debugEnabled) {
                     logger.debug("{} Stack contains: {} commands", logPrefix(), stack.size());
                 }
@@ -702,6 +705,10 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
      * @see RedisCommand#complete()
      */
     protected void complete(RedisCommand<?, ?, ?> command) {
+        if(command.getType().name().equalsIgnoreCase("mget")){
+            System.out.println("complete");
+        }
+        logger.info("command compete {}", Thread.currentThread().getName());
         command.complete();
     }
 

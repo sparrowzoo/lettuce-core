@@ -180,6 +180,7 @@ public abstract class RedisChannelHandler<K, V> implements Closeable, Connection
             return channelWriter.write(commandToSend);
         }
 
+        logger.info("thread ",Thread.currentThread().getName());
         return channelWriter.write(cmd);
     }
 

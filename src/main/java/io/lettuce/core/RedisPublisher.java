@@ -46,7 +46,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * Reactive command {@link Publisher} using ReactiveStreams.
- *
+ * <p>
  * This publisher handles command execution and response propagation to a {@link Subscriber}. Collections can be dissolved into
  * individual elements instead of emitting collections. This publisher allows multiple subscriptions if it's backed by a
  * {@link Supplier command supplier}.
@@ -77,12 +77,12 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
      * Creates a new {@link RedisPublisher} for a static command.
      *
      * @param staticCommand static command, must not be {@code null}.
-     * @param connection the connection, must not be {@code null}.
-     * @param dissolve dissolve collections into particular elements.
-     * @param publishOn executor to use for publishOn signals.
+     * @param connection    the connection, must not be {@code null}.
+     * @param dissolve      dissolve collections into particular elements.
+     * @param publishOn     executor to use for publishOn signals.
      */
     public RedisPublisher(RedisCommand<K, V, T> staticCommand, StatefulConnection<K, V> connection, boolean dissolve,
-            Executor publishOn) {
+                          Executor publishOn) {
         this(() -> staticCommand, connection, dissolve, publishOn);
     }
 
@@ -90,12 +90,12 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
      * Creates a new {@link RedisPublisher} for a command supplier.
      *
      * @param commandSupplier command supplier, must not be {@code null}.
-     * @param connection the connection, must not be {@code null}.
-     * @param dissolve dissolve collections into particular elements.
-     * @param publishOn executor to use for publishOn signals.
+     * @param connection      the connection, must not be {@code null}.
+     * @param dissolve        dissolve collections into particular elements.
+     * @param publishOn       executor to use for publishOn signals.
      */
     public RedisPublisher(Supplier<RedisCommand<K, V, T>> commandSupplier, StatefulConnection<K, V> connection,
-            boolean dissolve, Executor publishOn) {
+                          boolean dissolve, Executor publishOn) {
 
         LettuceAssert.notNull(commandSupplier, "CommandSupplier must not be null");
         LettuceAssert.notNull(connection, "StatefulConnection must not be null");
@@ -145,15 +145,15 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
 
         static final int ST_COMPLETED = 1;
 
-        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @SuppressWarnings({"rawtypes", "unchecked"})
         static final AtomicLongFieldUpdater<RedisSubscription> DEMAND = AtomicLongFieldUpdater
                 .newUpdater(RedisSubscription.class, "demand");
 
-        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @SuppressWarnings({"rawtypes", "unchecked"})
         static final AtomicReferenceFieldUpdater<RedisSubscription, State> STATE = AtomicReferenceFieldUpdater
                 .newUpdater(RedisSubscription.class, State.class, "state");
 
-        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @SuppressWarnings({"rawtypes", "unchecked"})
         static final AtomicReferenceFieldUpdater<RedisSubscription, CommandDispatch> COMMAND_DISPATCH = AtomicReferenceFieldUpdater
                 .newUpdater(RedisSubscription.class, CommandDispatch.class, "commandDispatch");
 
@@ -187,7 +187,7 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
 
         @SuppressWarnings("unchecked")
         RedisSubscription(StatefulConnection<?, ?> connection, RedisCommand<?, ?, T> command, boolean dissolve,
-                Executor executor) {
+                          Executor executor) {
 
             LettuceAssert.notNull(connection, "Connection must not be null");
             LettuceAssert.notNull(command, "RedisCommand must not be null");
@@ -241,6 +241,10 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
 
             State state = state();
 
+            if (this.command.getType().name().equalsIgnoreCase("get")) {
+                System.out.println("request "+n+",write channel");
+            }
+
             if (traceEnabled) {
                 LOG.trace("{} request: {}", state, n);
             }
@@ -288,7 +292,9 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
 
                     try {
                         DEMAND.decrementAndGet(this);
-                        this.subscriber.onNext(t);
+                        if (this.command.getType().name().equalsIgnoreCase("mget")) {
+                            this.subscriber.onNext(t);
+                        }
                     } catch (Exception e) {
                         onError(e);
                     }
@@ -390,7 +396,7 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
             COMMAND_DISPATCH.get(this).dispatch(this);
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @SuppressWarnings({"unchecked", "rawtypes"})
         void dispatchCommand() {
             connection.dispatch((RedisCommand) subscriptionCommand);
         }
@@ -448,7 +454,7 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
      *        v
      *   DISPATCHED
      * </pre>
-     *
+     * <p>
      * Refer to the individual states for more information.
      */
     private enum CommandDispatch {
@@ -458,7 +464,6 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
          * dispatch the command.
          */
         UNDISPATCHED {
-
             @Override
             void dispatch(RedisSubscription<?> redisSubscription) {
 
@@ -491,7 +496,7 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
      *    |                 v              |
      *    ------------> COMPLETED <---------
      * </pre>
-     *
+     * <p>
      * Refer to the individual states for more information.
      */
     private enum State {
@@ -501,7 +506,6 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
          * to {@link #NO_DEMAND}.
          */
         UNSUBSCRIBED {
-
             @SuppressWarnings("unchecked")
             @Override
             void subscribe(RedisSubscription<?> subscription, Subscriber<?> subscriber) {
@@ -525,7 +529,6 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
          * data available for reading.
          */
         NO_DEMAND {
-
             @Override
             void request(RedisSubscription<?> subscription, long n) {
 
@@ -555,7 +558,6 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
          * available data. The state will be changed to {@link #NO_DEMAND} if there is no demand.
          */
         DEMAND {
-
             @Override
             void onDataAvailable(RedisSubscription<?> subscription) {
 
@@ -622,7 +624,6 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
         },
 
         READING {
-
             @Override
             void request(RedisSubscription<?> subscription, long n) {
                 DEMAND.request(subscription, n);
@@ -634,7 +635,6 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
          * The terminal completed state. Does not respond to any events.
          */
         COMPLETED {
-
             @Override
             void request(RedisSubscription<?> subscription, long n) {
                 // ignore
@@ -878,7 +878,7 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
          * @see ImmediateSubscriber
          * @see PublishOnSubscriber
          */
-        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @SuppressWarnings({"unchecked", "rawtypes"})
         static <T> RedisSubscriber<T> create(Subscriber<?> delegate, Executor executor) {
 
             if (executor == ImmediateEventExecutor.INSTANCE) {
@@ -915,6 +915,7 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
 
         @Override
         public void onNext(T t) {
+            System.out.println("next" + t);
             delegate.onNext(t);
         }
 

@@ -63,7 +63,7 @@ public class DefaultEventLoopGroupProvider implements EventLoopGroupProvider {
     /**
      * Creates a new instance of {@link DefaultEventLoopGroupProvider}.
      *
-     * @param numberOfThreads number of threads (pool size)
+     * @param numberOfThreads       number of threads (pool size)
      * @param threadFactoryProvider provides access to {@link ThreadFactory}.
      * @since 6.0
      */
@@ -140,16 +140,16 @@ public class DefaultEventLoopGroupProvider implements EventLoopGroupProvider {
 
     /**
      * Customization hook for {@link EventLoopGroup} creation.
-     * 
+     *
      * @param <T>
-     * @param type requested event loop group type.
-     * @param numberOfThreads number of threads to create.
+     * @param type                  requested event loop group type.
+     * @param numberOfThreads       number of threads to create.
      * @param threadFactoryProvider provider for {@link ThreadFactory}.
      * @return
      * @since 6.0
      */
     protected <T extends EventLoopGroup> EventExecutorGroup doCreateEventLoopGroup(Class<T> type, int numberOfThreads,
-            ThreadFactoryProvider threadFactoryProvider) {
+                                                                                   ThreadFactoryProvider threadFactoryProvider) {
         return createEventLoopGroup(type, numberOfThreads, threadFactoryProvider);
     }
 
@@ -162,9 +162,9 @@ public class DefaultEventLoopGroupProvider implements EventLoopGroupProvider {
      * <li>KqueueEventLoopGroup</li>
      * </ul>
      *
-     * @param type the type
+     * @param type            the type
      * @param numberOfThreads the number of threads to use for the {@link EventExecutorGroup}
-     * @param <T> type parameter
+     * @param <T>             type parameter
      * @return a new instance of a {@link EventExecutorGroup}
      * @throws IllegalArgumentException if the {@code type} is not supported.
      */
@@ -181,15 +181,15 @@ public class DefaultEventLoopGroupProvider implements EventLoopGroupProvider {
      * <li>KqueueEventLoopGroup</li>
      * </ul>
      *
-     * @param type the type
+     * @param type            the type
      * @param numberOfThreads the number of threads to use for the {@link EventExecutorGroup}
-     * @param <T> type parameter
+     * @param <T>             type parameter
      * @return a new instance of a {@link EventExecutorGroup}
      * @throws IllegalArgumentException if the {@code type} is not supported.
      * @since 5.3
      */
     private static <T extends EventExecutorGroup> EventExecutorGroup createEventLoopGroup(Class<T> type, int numberOfThreads,
-            ThreadFactoryProvider factoryProvider) {
+                                                                                          ThreadFactoryProvider factoryProvider) {
 
         logger.debug("Creating executor {}", type.getName());
 
@@ -199,6 +199,7 @@ public class DefaultEventLoopGroupProvider implements EventLoopGroupProvider {
         }
 
         if (NioEventLoopGroup.class.equals(type)) {
+            logger.info("lettuce redis client thread group thread-name lettuce-nioEventLoop,thread-num-{}", numberOfThreads);
             return new NioEventLoopGroup(numberOfThreads, factoryProvider.getThreadFactory("lettuce-nioEventLoop"));
         }
 
@@ -288,14 +289,14 @@ public class DefaultEventLoopGroupProvider implements EventLoopGroupProvider {
     /**
      * Interface to provide a custom {@link java.util.concurrent.ThreadFactory}. Implementations are asked through
      * {@link #getThreadFactory(String)} to provide a thread factory for a given pool name.
-     * 
+     *
      * @since 6.0
      */
     public interface ThreadFactoryProvider {
 
         /**
          * Return a {@link ThreadFactory} for the given {@code poolName}.
-         * 
+         *
          * @param poolName a descriptive pool name. Typically used as prefix for thread names.
          * @return the {@link ThreadFactory}.
          */

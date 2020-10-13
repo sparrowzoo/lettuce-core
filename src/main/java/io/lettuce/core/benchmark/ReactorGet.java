@@ -1,11 +1,14 @@
 package io.lettuce.core.benchmark;
 
-import io.lettuce.core.KeyValue;
 import io.lettuce.core.api.reactive.RedisStringReactiveCommands;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
-import reactor.core.publisher.Flux;
+import io.lettuce.core.cluster.api.reactive.RedisAdvancedClusterReactiveCommands;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 public class ReactorGet {
     public static void main(String[] args) {
@@ -15,15 +18,23 @@ public class ReactorGet {
         RedisClusterClient redisClient = RedisClusterClient.create("redis://" + redisIpPorts);
         StatefulRedisClusterConnection<String, String> connection = redisClient.connect();
 
+        String list[]=new String[2];
+        list[0]="aa";
+        list[1]="bb";
+        connection.sync().mget(list);
+
         RedisStringReactiveCommands<String, String> reactive = connection.reactive();
 
         Mono<String> get = reactive.get("a");
-        long current=System.currentTimeMillis();
+        long current = System.currentTimeMillis();
         System.out.println("current thread" + Thread.currentThread().getName());
-        get.subscribe(keyValues -> {
-            System.out.println(keyValues);
-            System.out.println("cost "+(System.currentTimeMillis()-current));
-            System.out.println("call back thread" + Thread.currentThread().getName());
+        get.subscribe(new Consumer<String>() {
+            @Override
+            public void accept(String s) {
+                System.out.println(s);
+                System.out.println("cost " + (System.currentTimeMillis() - current));
+                System.out.println("call back thread" + Thread.currentThread().getName());
+            }
         });
         System.out.println("return thread " + Thread.currentThread().getId());
     }

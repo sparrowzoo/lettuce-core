@@ -15,6 +15,7 @@
  */
 package io.lettuce.core.benchmark;
 
+import com.google.common.util.concurrent.RateLimiter;
 import io.lettuce.core.KeyValue;
 import io.lettuce.core.api.reactive.RedisStringReactiveCommands;
 import io.lettuce.core.cluster.ClusterClientOptions;
@@ -34,17 +35,17 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * @author Mark Paluch
  */
-public class RedisClusterReactorBenchmark {
+public class RedisClusterReactorWithLimitBenchmark {
     static int KEY_COUNT = 500;
     static int THREAD_SIZE = 1;
     static int LOOP = 100;
     static int SLOT_SIZE = 64;
     static int KEY_LENGTH = 8;
+    static double QPS;
     static ExecutorService executorService;
 
     //java -cp lettuce-core-6.0.0.BUILD-SNAPSHOT.jar io.lettuce.core.benchmark.RedisClusterBenchmark
@@ -59,6 +60,9 @@ public class RedisClusterReactorBenchmark {
             LOOP = Integer.valueOf(args[2]);
             SLOT_SIZE = Integer.valueOf(args[3]);
             KEY_LENGTH = Integer.valueOf(args[4]);
+            if (args.length >= 6) {
+                QPS = Double.valueOf(args[5]);
+            }
         }
         executorService = Executors.newFixedThreadPool(THREAD_SIZE);
         // Syntax: redis://[password@]host[:port]
@@ -102,7 +106,7 @@ public class RedisClusterReactorBenchmark {
             System.out.println(keyValues);
             System.out.println("call back thread" + Thread.currentThread().getName());
         });
-        System.out.println("return thread "+Thread.currentThread().getId());
+        System.out.println("return thread " + Thread.currentThread().getId());
 
         StringBuilder benchmark = new StringBuilder();
         PartitionSlotDistribution slotDistribution = BenchmarkUtils.getPartitionSlotDistribution(redisClient.getPartitions(), hashTagKeys);
@@ -113,8 +117,9 @@ public class RedisClusterReactorBenchmark {
                 benchmark.append("slot-" + slot + ",key-size-" + slotDistribution.getPartitioned().get(slot).size() + "\n");
             }
         }
-        TopPercentile noHashTagTp = BenchmarkUtils.benchmarkReactor(redisClient, keys2, executorService, THREAD_SIZE, LOOP);
-        TopPercentile hashTagTp = BenchmarkUtils.benchmarkReactor(redisClient, keys, executorService, THREAD_SIZE, LOOP);
+        RateLimiter rateLimiter = RateLimiter.create(QPS);
+        TopPercentile noHashTagTp = BenchmarkUtils.benchmarkReactor(redisClient, keys2, executorService, THREAD_SIZE, LOOP, rateLimiter);
+        TopPercentile hashTagTp = BenchmarkUtils.benchmarkReactor(redisClient, keys, executorService, THREAD_SIZE, LOOP, rateLimiter);
         benchmark.append("hash-tag--" + hashTagTp + "\n");
         benchmark.append("non-hash-tag--" + noHashTagTp + "\n");
         System.out.println(benchmark.toString());

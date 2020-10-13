@@ -57,8 +57,8 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
  * @author Mark Paluch
  * @author Jongyeol Choi
  * @author Poorva Gokhale
- * @since 3.0
  * @see ClientResources
+ * @since 3.0
  */
 public abstract class AbstractRedisClient {
 
@@ -86,7 +86,7 @@ public abstract class AbstractRedisClient {
      * Create a new instance with client resources.
      *
      * @param clientResources the client resources. If {@code null}, the client will create a new dedicated instance of
-     *        client resources and keep track of them.
+     *                        client resources and keep track of them.
      */
     protected AbstractRedisClient(ClientResources clientResources) {
 
@@ -134,7 +134,7 @@ public abstract class AbstractRedisClient {
      * non-blocking commands.
      *
      * @param timeout Default connection timeout.
-     * @param unit Unit of time for the timeout.
+     * @param unit    Unit of time for the timeout.
      * @deprecated since 5.0, use {@link #setDefaultTimeout(Duration)}.
      */
     @Deprecated
@@ -167,7 +167,6 @@ public abstract class AbstractRedisClient {
      *
      * @return the {@link ClientResources} for this client.
      * @since 6.0
-     *
      */
     public ClientResources getResources() {
         return clientResources;
@@ -205,13 +204,14 @@ public abstract class AbstractRedisClient {
      * Populate connection builder with necessary resources.
      *
      * @param socketAddressSupplier address supplier for initial connect and re-connect
-     * @param connectionBuilder connection builder to configure the connection
-     * @param redisURI URI of the Redis instance
+     * @param connectionBuilder     connection builder to configure the connection
+     * @param redisURI              URI of the Redis instance
      */
     protected void connectionBuilder(Mono<SocketAddress> socketAddressSupplier, ConnectionBuilder connectionBuilder,
-            RedisURI redisURI) {
+                                     RedisURI redisURI) {
 
         Bootstrap redisBootstrap = new Bootstrap();
+
         redisBootstrap.option(ChannelOption.ALLOCATOR, ByteBufAllocator.DEFAULT);
 
         ClientOptions clientOptions = getOptions();
@@ -236,7 +236,9 @@ public abstract class AbstractRedisClient {
 
         LettuceAssert.notNull(connectionPoint, "ConnectionPoint must not be null");
 
-        connectionBuilder.bootstrap().group(getEventLoopGroup(connectionPoint));
+        EventLoopGroup eventLoopGroup = getEventLoopGroup(connectionPoint);
+        logger.info("redis bootstrap group {}", eventLoopGroup);
+        connectionBuilder.bootstrap().group(eventLoopGroup);
 
         if (connectionPoint.getSocket() != null) {
             NativeTransports.assertAvailable();
@@ -282,7 +284,7 @@ public abstract class AbstractRedisClient {
      * the channel/connection initialization. Any exception is rethrown as {@link RedisConnectionException}.
      *
      * @param connectionFuture must not be null.
-     * @param <T> Connection type.
+     * @param <T>              Connection type.
      * @return the connection.
      * @throws RedisConnectionException in case of connection failures.
      * @since 4.4
@@ -304,7 +306,7 @@ public abstract class AbstractRedisClient {
      * the channel/connection initialization. Any exception is rethrown as {@link RedisConnectionException}.
      *
      * @param connectionFuture must not be null.
-     * @param <T> Connection type.
+     * @param <T>              Connection type.
      * @return the connection.
      * @throws RedisConnectionException in case of connection failures.
      * @since 5.0
@@ -355,7 +357,7 @@ public abstract class AbstractRedisClient {
     }
 
     private void initializeChannelAsync0(ConnectionBuilder connectionBuilder, CompletableFuture<Channel> channelReadyFuture,
-            SocketAddress redisAddress) {
+                                         SocketAddress redisAddress) {
 
         logger.debug("Connecting to Redis at {}", redisAddress);
 
@@ -365,7 +367,7 @@ public abstract class AbstractRedisClient {
         redisBootstrap.handler(initializer);
 
         clientResources.nettyCustomizer().afterBootstrapInitialized(redisBootstrap);
-        logger.info("redis address {}",redisAddress);
+        logger.info("redis address {}", redisAddress);
         ChannelFuture connectFuture = redisBootstrap.connect(redisAddress);
 
         channelReadyFuture.whenComplete((c, t) -> {
@@ -437,10 +439,10 @@ public abstract class AbstractRedisClient {
      * client should be discarded after calling shutdown.
      *
      * @param quietPeriod the quiet period to allow the executor gracefully shut down.
-     * @param timeout the maximum amount of time to wait until the backing executor is shutdown regardless if a task was
-     *        submitted during the quiet period.
-     * @since 5.0
+     * @param timeout     the maximum amount of time to wait until the backing executor is shutdown regardless if a task was
+     *                    submitted during the quiet period.
      * @see EventExecutorGroup#shutdownGracefully(long, long, TimeUnit)
+     * @since 5.0
      */
     public void shutdown(Duration quietPeriod, Duration timeout) {
         shutdown(quietPeriod.toNanos(), timeout.toNanos(), TimeUnit.NANOSECONDS);
@@ -452,9 +454,9 @@ public abstract class AbstractRedisClient {
      * client should be discarded after calling shutdown.
      *
      * @param quietPeriod the quiet period to allow the executor gracefully shut down.
-     * @param timeout the maximum amount of time to wait until the backing executor is shutdown regardless if a task was
-     *        submitted during the quiet period.
-     * @param timeUnit the unit of {@code quietPeriod} and {@code timeout}.
+     * @param timeout     the maximum amount of time to wait until the backing executor is shutdown regardless if a task was
+     *                    submitted during the quiet period.
+     * @param timeUnit    the unit of {@code quietPeriod} and {@code timeout}.
      * @see EventExecutorGroup#shutdownGracefully(long, long, TimeUnit)
      */
     public void shutdown(long quietPeriod, long timeout, TimeUnit timeUnit) {
@@ -472,8 +474,8 @@ public abstract class AbstractRedisClient {
      * should be discarded after calling shutdown. The shutdown is executed without quiet time and a timeout of 2
      * {@link TimeUnit#SECONDS}.
      *
-     * @since 4.4
      * @see EventExecutorGroup#shutdownGracefully(long, long, TimeUnit)
+     * @since 4.4
      */
     public CompletableFuture<Void> shutdownAsync() {
         return shutdownAsync(0, 2, TimeUnit.SECONDS);
@@ -485,11 +487,11 @@ public abstract class AbstractRedisClient {
      * should be discarded after calling shutdown.
      *
      * @param quietPeriod the quiet period to allow the executor gracefully shut down.
-     * @param timeout the maximum amount of time to wait until the backing executor is shutdown regardless if a task was
-     *        submitted during the quiet period.
-     * @param timeUnit the unit of {@code quietPeriod} and {@code timeout}.
-     * @since 4.4
+     * @param timeout     the maximum amount of time to wait until the backing executor is shutdown regardless if a task was
+     *                    submitted during the quiet period.
+     * @param timeUnit    the unit of {@code quietPeriod} and {@code timeout}.
      * @see EventExecutorGroup#shutdownGracefully(long, long, TimeUnit)
+     * @since 4.4
      */
     public CompletableFuture<Void> shutdownAsync(long quietPeriod, long timeout, TimeUnit timeUnit) {
 

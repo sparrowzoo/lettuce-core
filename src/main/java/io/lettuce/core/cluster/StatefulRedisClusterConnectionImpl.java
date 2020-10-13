@@ -202,6 +202,9 @@ public class StatefulRedisClusterConnectionImpl<K, V> extends RedisChannelHandle
 
     @Override
     public <T> RedisCommand<K, V, T> dispatch(RedisCommand<K, V, T> command) {
+        if(command.getType().name().equalsIgnoreCase("get")){
+            System.out.println("dispacher");
+        }
         return super.dispatch(preProcessCommand(command));
     }
 

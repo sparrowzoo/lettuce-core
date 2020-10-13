@@ -89,18 +89,8 @@ public class RedisClusterBenchmark {
             connection.sync().set(keys[i], fixedLengthString);
             connection.sync().set(keys2[i], fixedLengthString);
 
-            //Mono<String> set = reactive.set("key", "value");
-            //Mono<String> get = reactive.get("key");
-            //set.subscribe();
-            //System.out.println(get.block());
         }
-        //Mono<String> set = reactive.set("key", "value");
-        //Flux<KeyValue<String, String>> get = reactive.mget(keys);
-        //set.subscribe();
-//        get.subscribe(keyValues -> {
-//            System.out.println("end");
-//            System.out.println(keyValues);
-//        });
+
 
         StringBuilder benchmark = new StringBuilder();
         PartitionSlotDistribution slotDistribution = BenchmarkUtils.getPartitionSlotDistribution(redisClient.getPartitions(), hashTagKeys);

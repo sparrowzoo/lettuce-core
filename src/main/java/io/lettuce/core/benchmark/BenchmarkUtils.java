@@ -1,5 +1,6 @@
 package io.lettuce.core.benchmark;
 
+import com.google.common.util.concurrent.RateLimiter;
 import io.lettuce.core.KeyValue;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.SlotHash;
@@ -102,8 +103,12 @@ public class BenchmarkUtils {
         return topPercentile;
     }
 
-
     public static TopPercentile benchmarkReactor(RedisClusterClient redisClusterClient, String[] keys, ExecutorService executorService, int threadSize, int loop) throws InterruptedException {
+        return benchmarkReactor(redisClusterClient, keys, executorService, threadSize, loop, null);
+    }
+
+
+    public static TopPercentile benchmarkReactor(RedisClusterClient redisClusterClient, String[] keys, ExecutorService executorService, int threadSize, int loop, RateLimiter rateLimiter) throws InterruptedException {
         ConcurrentSkipListMap<Integer, AtomicInteger> tpMap = new ConcurrentSkipListMap<>();
         long t = System.currentTimeMillis();
         AtomicInteger sampleCount = new AtomicInteger(0);
@@ -116,6 +121,9 @@ public class BenchmarkUtils {
                 for (int i = 0; i < loop; i++) {
                     long t1 = System.currentTimeMillis();
                     try {
+                        if (rateLimiter != null) {
+                            rateLimiter.acquire();
+                        }
                         Flux<KeyValue<String, String>> flux = connection.reactive().mget(keys);
                         flux.collectList().subscribe(stringStringKeyValue -> {
                             Integer cost = (int) (System.currentTimeMillis() - t1);
