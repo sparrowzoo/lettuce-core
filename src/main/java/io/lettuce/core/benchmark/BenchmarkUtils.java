@@ -36,13 +36,13 @@ public class BenchmarkUtils {
         //key-time
         //value-count
         int count = 0;
-        int time = 0;
+        long time = 0;
         for (Integer key : samples.keySet()) {
             int currentCount = samples.get(key).get();
             count += currentCount;
             time += key * currentCount;
         }
-        return time / count;
+        return (int)(time / count);
     }
 
     private static int getTopPercentile(Map<Integer, AtomicInteger> tp, int position) {
