@@ -124,7 +124,7 @@ public class RedisClusterReactorWithLimitBenchmark {
         benchmark.append("non-hash-tag--" + noHashTagTp + "\n");
         System.out.println(benchmark.toString());
 
-        String fileName = String.format("./redis-reactor-benchmark-keycount%s-threadsize%s-loop%s-slotsize%s-keylength%s", KEY_COUNT, THREAD_SIZE, LOOP, SLOT_SIZE, KEY_LENGTH);
+        String fileName = String.format("./redis-reactor-benchmark-with-limit-keycount%s-threadsize%s-loop%s-slotsize%s-keylength%s-rate %s", KEY_COUNT, THREAD_SIZE, LOOP, SLOT_SIZE, KEY_LENGTH,QPS);
         FileUtils.write(new File(fileName), benchmark.toString(), Charset.defaultCharset());
     }
 }
