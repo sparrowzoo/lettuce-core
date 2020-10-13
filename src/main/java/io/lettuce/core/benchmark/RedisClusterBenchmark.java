@@ -110,7 +110,6 @@ public class RedisClusterBenchmark {
         String fileName = String.format("./redis-benchmark-keycount%s-threadsize%s-loop%s-slotsize%s-keylength%s", KEY_COUNT, THREAD_SIZE, LOOP, SLOT_SIZE, KEY_LENGTH);
         FileUtils.write(new File(fileName), benchmark.toString(), Charset.defaultCharset());
         redisClient.shutdown();
-        System.in.read();
     }
 }
 
