@@ -1,19 +1,29 @@
 package io.lettuce.core.benchmark;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 class TopPercentile {
+    public static final String FORMAT_YYYY_MM_DD_HH_MM_SS_MS = "yyyy-MM-dd HH:mm:ss SSS";
+    private String startTime;
+    private String endTime;
     private int tp999;
     private int tp99;
     private int tp95;
     private int max;
     private int sum;
+    private int avg;
+    private int allCount;
 
     public TopPercentile() {
     }
 
-    public TopPercentile(int tp99, int tp95,int tp999, int max) {
+    public TopPercentile(int tp99, int tp95, int tp999, int avg, int max) {
         this.tp99 = tp99;
         this.tp95 = tp95;
-        this.tp999=tp999;
+        this.tp999 = tp999;
+        this.avg = avg;
         this.max = max;
     }
 
@@ -49,16 +59,32 @@ class TopPercentile {
         this.tp999 = tp999;
     }
 
-    @Override
-    public String toString() {
-        return "TopPercentile{" +
-                "tp999=" + tp999 +
-                ", tp99=" + tp99 +
-                ", tp95=" + tp95 +
-                ", max=" + max +
-                ", sum=" + sum +
-                '}';
+    public int getAvg() {
+        return avg;
     }
+
+    public void setAvg(int avg) {
+        this.avg = avg;
+    }
+
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Long startTime) {
+        DateFormat sdf =new SimpleDateFormat(FORMAT_YYYY_MM_DD_HH_MM_SS_MS);
+        this.startTime= sdf.format(new Date(startTime));
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Long endTime) {
+        DateFormat sdf =new SimpleDateFormat(FORMAT_YYYY_MM_DD_HH_MM_SS_MS);
+        this.endTime= sdf.format(new Date(endTime));
+    }
+
 
     public int getSum() {
         return sum;
@@ -66,5 +92,28 @@ class TopPercentile {
 
     public void setSum(int sum) {
         this.sum = sum;
+    }
+
+    public int getAllCount() {
+        return allCount;
+    }
+
+    public void setAllCount(int allCount) {
+        this.allCount = allCount;
+    }
+
+    @Override
+    public String toString() {
+        return "TopPercentile{" +
+                "startTime='" + startTime + '\'' +
+                ", endTime='" + endTime + '\'' +
+                ", tp999=" + tp999 +
+                ", tp99=" + tp99 +
+                ", tp95=" + tp95 +
+                ", max=" + max +
+                ", sum=" + sum +
+                ", avg=" + avg +
+                ", allCount=" + allCount +
+                '}';
     }
 }

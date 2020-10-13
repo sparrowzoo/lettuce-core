@@ -9,6 +9,7 @@ import io.lettuce.core.cluster.models.partitions.Partitions;
 import io.lettuce.core.codec.StringCodec;
 import reactor.core.publisher.Flux;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BenchmarkUtils {
+
+    private static int getCount(ConcurrentSkipListMap<Integer, AtomicInteger> samples) {
+        //key-time
+        //value-count
+        int count = 0;
+        for (Integer key : samples.keySet()) {
+            int currentCount = samples.get(key).get();
+            count += currentCount;
+        }
+        return count;
+    }
+
+    private static int getAvg(ConcurrentSkipListMap<Integer, AtomicInteger> samples) {
+        //key-time
+        //value-count
+        int count = 0;
+        int time = 0;
+        for (Integer key : samples.keySet()) {
+            int currentCount = samples.get(key).get();
+            count += currentCount;
+            time += key * currentCount;
+        }
+        return time / count;
+    }
 
     private static int getTopPercentile(Map<Integer, AtomicInteger> tp, int position) {
         int current = 0;
@@ -64,7 +89,10 @@ public class BenchmarkUtils {
         int tp95Position = new Double(Math.ceil(count * 0.95F)).intValue();
         int tp95 = getTopPercentile(samples, tp95Position);
         int max = samples.lastEntry().getKey();
-        return new TopPercentile(tp99, tp95, tp999, max);
+        int avg = getAvg(samples);
+        TopPercentile topPercentile = new TopPercentile(tp99, tp95, tp999, avg, max);
+        topPercentile.setAllCount(getCount(samples));
+        return topPercentile;
     }
 
     public static TopPercentile benchmark(RedisClusterClient redisClusterClient, String[] keys, ExecutorService executorService, int threadSize, int loop) throws InterruptedException {
@@ -99,6 +127,8 @@ public class BenchmarkUtils {
         }
         countDownLatch.await();
         TopPercentile topPercentile = getTopPercentile(tpMap);
+        topPercentile.setStartTime(t);
+        topPercentile.setEndTime(System.currentTimeMillis());
         topPercentile.setSum((int) (System.currentTimeMillis() - t));
         return topPercentile;
     }
@@ -112,7 +142,7 @@ public class BenchmarkUtils {
         ConcurrentSkipListMap<Integer, AtomicInteger> tpMap = new ConcurrentSkipListMap<>();
         long t = System.currentTimeMillis();
         AtomicInteger sampleCount = new AtomicInteger(0);
-        CountDownLatch countDownLatch = new CountDownLatch(threadSize);
+        CountDownLatch countDownLatch = new CountDownLatch(threadSize * loop);
         List<StatefulRedisClusterConnection> connections = new ArrayList<>();
         for (int ti = 0; ti < threadSize; ti++) {
             StatefulRedisClusterConnection connection = redisClusterClient.connect();
@@ -146,6 +176,8 @@ public class BenchmarkUtils {
             connection.close();
         }
         TopPercentile topPercentile = getTopPercentile(tpMap);
+        topPercentile.setStartTime(t);
+        topPercentile.setEndTime(System.currentTimeMillis());
         topPercentile.setSum((int) (System.currentTimeMillis() - t));
         return topPercentile;
     }

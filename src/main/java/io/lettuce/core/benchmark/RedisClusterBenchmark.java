@@ -58,7 +58,7 @@ public class RedisClusterBenchmark {
         executorService = Executors.newFixedThreadPool(THREAD_SIZE);
         // Syntax: redis://[password@]host[:port]
         String redisIpPorts = "192.168.2.10:9000,192.168.2.14:9000,192.168.2.13:9000";
-        redisIpPorts = "10.197.97.16:8001,10.197.97.17:8002,10.197.97.18:8001,10.197.97.16:8002,10.197.97.17:8001,10.197.97.18:8002";
+        //redisIpPorts = "10.197.97.16:8001,10.197.97.17:8002,10.197.97.18:8001,10.197.97.16:8002,10.197.97.17:8001,10.197.97.18:8002";
         RedisClusterClient redisClient = RedisClusterClient.create("redis://" + redisIpPorts);
         ClusterTopologyRefreshOptions clusterTopologyRefreshOptions = ClusterTopologyRefreshOptions.builder()//
                 .enablePeriodicRefresh(10, TimeUnit.HOURS)//
@@ -71,8 +71,8 @@ public class RedisClusterBenchmark {
         redisClient.setOptions(clusterClientOptions);
 
         StatefulRedisClusterConnection<String, String> connection = redisClient.connect();
-        String keys[] = new String[KEY_COUNT];
-        String keys2[] = new String[KEY_COUNT];
+        String hashTag[] = new String[KEY_COUNT];
+        String withoutHashTag[] = new String[KEY_COUNT];
 
         String fixedLengthString = BenchmarkUtils.generateFixedLengthString(KEY_LENGTH);
 
@@ -83,12 +83,11 @@ public class RedisClusterBenchmark {
             String key = "mc:s-info-sku" + i + "" + new Random().nextInt(KEY_COUNT);
             int slot = CRC16.crc16(key.getBytes());
             int prefix = slot % SLOT_SIZE;
-            keys[i] = "{" + prefix + "}" + key;
-            hashTagKeys.add(keys[i]);
-            keys2[i] = "mc:s-info-sku" + i + "" + new Random().nextInt(KEY_COUNT);
-            connection.sync().set(keys[i], fixedLengthString);
-            connection.sync().set(keys2[i], fixedLengthString);
-
+            hashTag[i] = "{" + prefix + "}" + key;
+            hashTagKeys.add(hashTag[i]);
+            withoutHashTag[i] = "mc:s-info-sku" + i + "" + new Random().nextInt(KEY_COUNT);
+            connection.sync().set(hashTag[i], fixedLengthString);
+            connection.sync().set(withoutHashTag[i], fixedLengthString);
         }
 
 
@@ -101,15 +100,16 @@ public class RedisClusterBenchmark {
                 benchmark.append("slot-" + slot + ",key-size-" + slotDistribution.getPartitioned().get(slot).size() + "\n");
             }
         }
-        TopPercentile tp2 = BenchmarkUtils.benchmark(redisClient, keys2, executorService, THREAD_SIZE, LOOP);
-        TopPercentile tp1 = BenchmarkUtils.benchmark(redisClient, keys, executorService, THREAD_SIZE, LOOP);
-        benchmark.append("hash-tag--" + tp1 + "\n");
-        benchmark.append("non-hash-tag--" + tp2 + "\n");
+        TopPercentile withoutHashTagTp = BenchmarkUtils.benchmark(redisClient, withoutHashTag, executorService, THREAD_SIZE, LOOP);
+        TopPercentile hashTagTp = BenchmarkUtils.benchmark(redisClient, hashTag, executorService, THREAD_SIZE, LOOP);
+        benchmark.append("hash-tag--" + hashTagTp + "\n");
+        benchmark.append("non-hash-tag--" + withoutHashTagTp + "\n");
         System.out.println(benchmark.toString());
 
         String fileName = String.format("./redis-benchmark-keycount%s-threadsize%s-loop%s-slotsize%s-keylength%s", KEY_COUNT, THREAD_SIZE, LOOP, SLOT_SIZE, KEY_LENGTH);
         FileUtils.write(new File(fileName), benchmark.toString(), Charset.defaultCharset());
         redisClient.shutdown();
+        executorService.shutdownNow();
     }
 }
 

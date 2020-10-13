@@ -67,7 +67,7 @@ public class RedisClusterReactorWithLimitBenchmark {
         executorService = Executors.newFixedThreadPool(THREAD_SIZE);
         // Syntax: redis://[password@]host[:port]
         String redisIpPorts = "192.168.2.10:9000,192.168.2.14:9000,192.168.2.13:9000";
-        redisIpPorts = "10.197.97.16:8001,10.197.97.17:8002,10.197.97.18:8001,10.197.97.16:8002,10.197.97.17:8001,10.197.97.18:8002";
+        //redisIpPorts = "10.197.97.16:8001,10.197.97.17:8002,10.197.97.18:8001,10.197.97.16:8002,10.197.97.17:8001,10.197.97.18:8002";
         RedisClusterClient redisClient = RedisClusterClient.create("redis://" + redisIpPorts);
         ClusterTopologyRefreshOptions clusterTopologyRefreshOptions = ClusterTopologyRefreshOptions.builder()//
                 .enablePeriodicRefresh(10, TimeUnit.HOURS)//
@@ -124,8 +124,10 @@ public class RedisClusterReactorWithLimitBenchmark {
         benchmark.append("non-hash-tag--" + noHashTagTp + "\n");
         System.out.println(benchmark.toString());
 
-        String fileName = String.format("./redis-reactor-benchmark-with-limit-keycount%s-threadsize%s-loop%s-slotsize%s-keylength%s-rate %s", KEY_COUNT, THREAD_SIZE, LOOP, SLOT_SIZE, KEY_LENGTH,QPS);
+        String fileName = String.format("./redis-reactor-benchmark-with-limit-keycount%s-threadsize%s-loop%s-slotsize%s-keylength%s-rate %s", KEY_COUNT, THREAD_SIZE, LOOP, SLOT_SIZE, KEY_LENGTH, QPS);
         FileUtils.write(new File(fileName), benchmark.toString(), Charset.defaultCharset());
+        redisClient.shutdown();
+        executorService.shutdownNow();
     }
 }
 
