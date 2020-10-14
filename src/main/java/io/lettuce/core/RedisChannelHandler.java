@@ -236,7 +236,7 @@ public abstract class RedisChannelHandler<K, V> implements Closeable, Connection
                     if (closeable instanceof AsyncCloseable) {
                         ((AsyncCloseable) closeable).closeAsync();
                     } else {
-                        logger.info("resource close {}",closeable);
+                        Debugger.getDebugger().info(logger,"resource close {}",closeable);
                         closeable.close();
                     }
                 } catch (IOException e) {

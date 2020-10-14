@@ -243,10 +243,10 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
             State state = state();
 
             if (this.command.getType().name().equalsIgnoreCase("get")) {
-               Debugger.getDebugger().info(LOG,"request {},write channel",n);
+                Debugger.getDebugger().info(LOG, "request {},write channel", n);
             }
 
-            Debugger.getDebugger().info(LOG,"state {} request: {}", state, n);
+            Debugger.getDebugger().info(LOG, "state {} request: {}", state, n);
             state.request(this, n);
         }
 
@@ -913,7 +913,7 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
 
         @Override
         public void onNext(T t) {
-            System.out.println("next" + t);
+            Debugger.getDebugger().info(LOG, "next" + t);
             delegate.onNext(t);
         }
 

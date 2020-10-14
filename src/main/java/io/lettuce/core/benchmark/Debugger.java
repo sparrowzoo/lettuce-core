@@ -4,7 +4,7 @@ import io.netty.util.internal.logging.InternalLogger;
 
 public class Debugger {
     private boolean debug = false;
-    private String env = "dev";
+    private String env = "press";
     private Debugger() {
     }
     public String getIpPortPair() {

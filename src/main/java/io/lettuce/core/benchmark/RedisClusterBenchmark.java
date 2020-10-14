@@ -48,6 +48,8 @@ public class RedisClusterBenchmark {
             System.out.println("key_count thread_size loop slot_size  key_length");
             System.exit(0);
         }
+        //eventLoop 线程数默认是 Runtime.getRuntime().availableProcessors()
+        System.setProperty("io.netty.eventLoopThreads", THREAD_SIZE + "");
         if (args.length > 0) {
             KEY_COUNT = Integer.valueOf(args[0]);
             THREAD_SIZE = Integer.valueOf(args[1]);
