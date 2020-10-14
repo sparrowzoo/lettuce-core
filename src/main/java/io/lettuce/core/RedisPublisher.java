@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Supplier;
 
+import io.lettuce.core.benchmark.Debugger;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -242,13 +243,10 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
             State state = state();
 
             if (this.command.getType().name().equalsIgnoreCase("get")) {
-                System.out.println("request "+n+",write channel");
+               Debugger.getDebugger().info(LOG,"request {},write channel",n);
             }
 
-            if (traceEnabled) {
-                LOG.trace("{} request: {}", state, n);
-            }
-
+            Debugger.getDebugger().info(LOG,"state {} request: {}", state, n);
             state.request(this, n);
         }
 

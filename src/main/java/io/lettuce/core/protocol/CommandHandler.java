@@ -29,6 +29,7 @@ import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.RedisException;
 import io.lettuce.core.api.push.PushListener;
 import io.lettuce.core.api.push.PushMessage;
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.internal.LettuceAssert;
 import io.lettuce.core.internal.LettuceSets;
 import io.lettuce.core.output.CommandOutput;
@@ -122,7 +123,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
      * @param endpoint        must not be {@code null}.
      */
     public CommandHandler(ClientOptions clientOptions, ClientResources clientResources, Endpoint endpoint) {
-        logger.info("init new command handler thread-name {}", Thread.currentThread().getName());
+        Debugger.getDebugger().info(logger,"init new command handler thread-name {}", Thread.currentThread().getName());
         LettuceAssert.notNull(clientOptions, "ClientOptions must not be null");
         LettuceAssert.notNull(clientResources, "ClientResources must not be null");
         LettuceAssert.notNull(endpoint, "RedisEndpoint must not be null");
@@ -388,14 +389,14 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
     private void writeSingleCommand(ChannelHandlerContext ctx, RedisCommand<?, ?, ?> command, ChannelPromise promise) {
 
         if (command.getType().name().equalsIgnoreCase("get")) {
-            logger.info("write single command {}", command.getType());
+            Debugger.getDebugger().info(logger,"write single command {}", command.getType());
         }
         if (!isWriteable(command)) {
             promise.trySuccess();
             return;
         }
 
-        logger.info("add stack command {} promise {}", command, promise);
+        Debugger.getDebugger().info(logger,"add stack command {} promise {}", command, promise);
         addToStack(command, promise);
 
         if (tracingEnabled && command instanceof CompleteableCommand) {
@@ -582,7 +583,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
         }
 
         while (canDecode(buffer)) {
-            logger.info("can decode thread-name {}", Thread.currentThread().getName());
+            Debugger.getDebugger().info(logger,"can decode thread-name {}", Thread.currentThread().getName());
 
             if (isPushDecode(buffer)) {
 
@@ -610,7 +611,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
 
                 RedisCommand<?, ?, ?> command = stack.peek();
                 if (command.getType().name().equalsIgnoreCase("mget")) {
-                    logger.info("mget callback args {},thread-name {}", command.getArgs(), Thread.currentThread().getName());
+                   Debugger.getDebugger().info(logger,"mget callback args {},thread-name {}", command.getArgs(), Thread.currentThread().getName());
                 }
                 if (debugEnabled) {
                     logger.debug("{} Stack contains: {} commands", logPrefix(), stack.size());
@@ -706,9 +707,8 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
      */
     protected void complete(RedisCommand<?, ?, ?> command) {
         if(command.getType().name().equalsIgnoreCase("mget")){
-            System.out.println("complete");
+            Debugger.getDebugger().info(logger,"command compete {}", Thread.currentThread().getName());
         }
-        logger.info("command compete {}", Thread.currentThread().getName());
         command.complete();
     }
 
@@ -804,7 +804,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
     }
 
     protected boolean decode(ByteBuf buffer, RedisCommand<?, ?, ?> command, CommandOutput<?, ?, ?> output) {
-        logger.info("command decode thread-name{}", Thread.currentThread().getName());
+        Debugger.getDebugger().info(logger,"command decode thread-name{}", Thread.currentThread().getName());
         return rsm.decode(buffer, output, command::completeExceptionally);
     }
 

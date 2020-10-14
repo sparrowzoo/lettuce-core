@@ -20,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.internal.ExceptionFactory;
 import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.resource.ClientResources;
@@ -55,7 +56,7 @@ public class RedisHandshakeHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-        logger.info("channel registered {},thread-name {}",ctx.channel(),Thread.currentThread().getName());
+        Debugger.getDebugger().info(logger,"channel registered {},thread-name {}",ctx.channel(),Thread.currentThread().getName());
 
         Runnable timeoutGuard = () -> {
 

@@ -18,6 +18,7 @@ package io.lettuce.core.protocol;
 import java.nio.charset.Charset;
 import java.util.Collection;
 
+import io.lettuce.core.benchmark.Debugger;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -72,7 +73,7 @@ public class CommandEncoder extends MessageToByteEncoder<Object> {
     @SuppressWarnings("unchecked")
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
 
-        logger.info("redis encode {} thread-id-{}", msg,Thread.currentThread().getId());
+        Debugger.getDebugger().info(logger,"redis encode {} thread-id-{}", msg,Thread.currentThread().getId());
 
         out.touch("CommandEncoder.encode(…)");
         if (msg instanceof RedisCommand) {

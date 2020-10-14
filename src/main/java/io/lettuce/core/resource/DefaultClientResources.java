@@ -18,6 +18,7 @@ package io.lettuce.core.resource;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import io.lettuce.core.benchmark.Debugger;
 import reactor.core.scheduler.Schedulers;
 import io.lettuce.core.event.DefaultEventBus;
 import io.lettuce.core.event.DefaultEventPublisherOptions;
@@ -98,8 +99,22 @@ public class DefaultClientResources implements ClientResources {
 
     static {
 
+        /**
+         * cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l
+         * 2
+         * $ cat /proc/cpuinfo | grep "processor" | wc -l //Runtime.getRuntime().availableProcessors()
+         * 40
+         * $ cat /proc/cpuinfo | grep "cpu cores" | uniq
+         * cpu cores : 10
+         * 总核数 = 物理CPU个数 * 每颗物理CPU的核数；
+         * 总逻辑CPU数 = 物理CPU个数 *每颗物理CPU的核数 * 超线程数。
+         *
+         * 40/10/2=2，可见该CPU支持并已打开超线程。
+         * processor/cpu cores/physical=2 超线程数
+         */
         int threads = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads",
                 Math.max(MIN_IO_THREADS, Runtime.getRuntime().availableProcessors())));
+        Debugger.getDebugger().info(logger,"default io thread {}",threads);
 
         DEFAULT_IO_THREADS = threads;
         DEFAULT_COMPUTATION_THREADS = threads;

@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.internal.*;
 import reactor.core.publisher.Mono;
 import io.lettuce.core.Transports.NativeTransports;
@@ -237,7 +238,7 @@ public abstract class AbstractRedisClient {
         LettuceAssert.notNull(connectionPoint, "ConnectionPoint must not be null");
 
         EventLoopGroup eventLoopGroup = getEventLoopGroup(connectionPoint);
-        logger.info("redis bootstrap group {}", eventLoopGroup);
+        Debugger.getDebugger().info(logger,"redis bootstrap group {}", eventLoopGroup);
         connectionBuilder.bootstrap().group(eventLoopGroup);
 
         if (connectionPoint.getSocket() != null) {
@@ -359,7 +360,7 @@ public abstract class AbstractRedisClient {
     private void initializeChannelAsync0(ConnectionBuilder connectionBuilder, CompletableFuture<Channel> channelReadyFuture,
                                          SocketAddress redisAddress) {
 
-        logger.debug("Connecting to Redis at {}", redisAddress);
+       Debugger.getDebugger().info(logger,"Connecting to Redis at {}", redisAddress);
 
         Bootstrap redisBootstrap = connectionBuilder.bootstrap();
 
@@ -367,7 +368,7 @@ public abstract class AbstractRedisClient {
         redisBootstrap.handler(initializer);
 
         clientResources.nettyCustomizer().afterBootstrapInitialized(redisBootstrap);
-        logger.info("redis address {}", redisAddress);
+        Debugger.getDebugger().info(logger,"redis address {}", redisAddress);
         ChannelFuture connectFuture = redisBootstrap.connect(redisAddress);
 
         channelReadyFuture.whenComplete((c, t) -> {
@@ -381,7 +382,7 @@ public abstract class AbstractRedisClient {
 
             if (!future.isSuccess()) {
 
-                logger.debug("Connecting to Redis at {}: {}", redisAddress, future.cause());
+                Debugger.getDebugger().info(logger,"Connecting to Redis at {}: {}", redisAddress, future.cause());
                 connectionBuilder.endpoint().initialState();
                 channelReadyFuture.completeExceptionally(future.cause());
                 return;
@@ -397,7 +398,7 @@ public abstract class AbstractRedisClient {
             handshakeHandler.channelInitialized().whenComplete((success, throwable) -> {
 
                 if (throwable == null) {
-                    logger.info("Connecting to Redis at {}: Success", redisAddress);
+                    Debugger.getDebugger().info(logger,"Connecting to Redis at {}: Success", redisAddress);
                     RedisChannelHandler<?, ?> connection = connectionBuilder.connection();
                     connection.registerCloseables(closeableResources, connection);
                     channelReadyFuture.complete(connectFuture.channel());

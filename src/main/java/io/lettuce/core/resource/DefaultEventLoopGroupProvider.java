@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.internal.LettuceAssert;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -132,10 +133,13 @@ public class DefaultEventLoopGroupProvider implements EventLoopGroupProvider {
         }
 
         if (!eventLoopGroups.containsKey(type)) {
+            Debugger.getDebugger().info(logger,"create event loop group from cache {}",type);
             eventLoopGroups.put(type, doCreateEventLoopGroup(type, numberOfThreads, threadFactoryProvider));
         }
 
-        return (T) eventLoopGroups.get(type);
+        Debugger.getDebugger().info(logger,"get event loop group from cache {}",type);
+        return (
+                T) eventLoopGroups.get(type);
     }
 
     /**
@@ -199,7 +203,7 @@ public class DefaultEventLoopGroupProvider implements EventLoopGroupProvider {
         }
 
         if (NioEventLoopGroup.class.equals(type)) {
-            logger.info("lettuce redis client thread group thread-name lettuce-nioEventLoop,thread-num-{}", numberOfThreads);
+            Debugger.getDebugger().info(logger,"lettuce redis client thread group thread-name lettuce-nioEventLoop,thread-num-{}", numberOfThreads);
             return new NioEventLoopGroup(numberOfThreads, factoryProvider.getThreadFactory("lettuce-nioEventLoop"));
         }
 

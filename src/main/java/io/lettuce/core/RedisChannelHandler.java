@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import io.lettuce.core.api.StatefulConnection;
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.internal.AsyncCloseable;
 import io.lettuce.core.internal.LettuceAssert;
 import io.lettuce.core.protocol.*;
@@ -180,7 +181,7 @@ public abstract class RedisChannelHandler<K, V> implements Closeable, Connection
             return channelWriter.write(commandToSend);
         }
 
-        logger.info("thread ",Thread.currentThread().getName());
+        Debugger.getDebugger().info(logger,"thread {}",Thread.currentThread().getName());
         return channelWriter.write(cmd);
     }
 
@@ -227,7 +228,7 @@ public abstract class RedisChannelHandler<K, V> implements Closeable, Connection
             for (Closeable closeable : closeables) {
 
                 if (closeable == RedisChannelHandler.this) {
-                    logger.info("closeable {}",RedisChannelHandler.class);
+                    Debugger.getDebugger().info(logger,"closeable {}",RedisChannelHandler.class);
                     continue;
                 }
 

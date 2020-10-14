@@ -15,7 +15,9 @@
  */
 package io.lettuce.core.codec;
 
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.internal.LettuceAssert;
+import io.lettuce.core.protocol.CommandEncoder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -37,7 +39,7 @@ import java.nio.charset.*;
  */
 public class StringCodec implements RedisCodec<String, String>, ToByteBufEncoder<String, String> {
 
-    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(StringCodec.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(CommandEncoder.class);
 
 
     public static final StringCodec UTF8 = new StringCodec(StandardCharsets.UTF_8);
@@ -118,10 +120,7 @@ public class StringCodec implements RedisCodec<String, String>, ToByteBufEncoder
     @Override
     public String decodeValue(ByteBuffer bytes) {
         String value=Unpooled.wrappedBuffer(bytes).toString(charset);
-        if(value.equalsIgnoreCase("a")){
-            System.out.println("debug");
-        }
-        LOG.info("decode value thread-name:{} value={}",Thread.currentThread().getName(),value);
+        Debugger.getDebugger().info(logger,"decode value thread-name:{} value={}",Thread.currentThread().getName(),value);
         return value;
     }
 

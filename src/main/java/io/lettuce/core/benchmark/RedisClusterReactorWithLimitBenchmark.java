@@ -54,20 +54,19 @@ public class RedisClusterReactorWithLimitBenchmark {
             System.out.println("key_count thread_size loop slot_size  key_length");
             System.exit(0);
         }
-        if (args.length > 0) {
-            KEY_COUNT = Integer.valueOf(args[0]);
-            THREAD_SIZE = Integer.valueOf(args[1]);
-            LOOP = Integer.valueOf(args[2]);
-            SLOT_SIZE = Integer.valueOf(args[3]);
-            KEY_LENGTH = Integer.valueOf(args[4]);
-            if (args.length >= 6) {
-                QPS = Double.valueOf(args[5]);
-            }
+
+        KEY_COUNT = Integer.valueOf(args[0]);
+        THREAD_SIZE = Integer.valueOf(args[1]);
+        LOOP = Integer.valueOf(args[2]);
+        SLOT_SIZE = Integer.valueOf(args[3]);
+        KEY_LENGTH = Integer.valueOf(args[4]);
+        if (args.length >= 6) {
+            QPS = Double.valueOf(args[5]);
         }
+
         executorService = Executors.newFixedThreadPool(THREAD_SIZE);
         // Syntax: redis://[password@]host[:port]
-        String redisIpPorts = "192.168.2.10:9000,192.168.2.14:9000,192.168.2.13:9000";
-        redisIpPorts = "10.197.97.16:8001,10.197.97.17:8002,10.197.97.18:8001,10.197.97.16:8002,10.197.97.17:8001,10.197.97.18:8002";
+        String redisIpPorts = Debugger.getDebugger().getIpPortPair();
         RedisClusterClient redisClient = RedisClusterClient.create("redis://" + redisIpPorts);
         ClusterTopologyRefreshOptions clusterTopologyRefreshOptions = ClusterTopologyRefreshOptions.builder()//
                 .enablePeriodicRefresh(10, TimeUnit.HOURS)//

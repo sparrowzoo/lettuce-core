@@ -31,6 +31,7 @@ import io.lettuce.core.RedisException;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.cluster.models.partitions.Partitions;
 import io.lettuce.core.cluster.models.partitions.RedisClusterNode;
 import io.lettuce.core.cluster.topology.TopologyComparators.SortAction;
@@ -318,7 +319,7 @@ class DefaultClusterTopologyRefresh implements ClusterTopologyRefresh {
                 }, timeout, timeUnit);
 
                 connectionFuture.whenComplete((connection, throwable) -> {
-                    logger.info("partition connection ...{}", connection);
+                    Debugger.getDebugger().info(logger,"partition connection ...{}", connection);
                     cancelTimeout.cancel();
 
                     if (throwable != null) {

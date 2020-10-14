@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.support.LettuceCdiExtension;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -246,7 +247,7 @@ public class ConnectionBuilder {
         private void doInitialize(Channel channel) {
 
             for (ChannelHandler handler : handlers.get()) {
-                LOGGER.info("channel-{}-handler-{}", channel, handler.getClass().getName());
+                Debugger.getDebugger().info(LOGGER,"channel-{}-handler-{}", channel, handler.getClass().getName());
                 channel.pipeline().addLast(handler);
             }
 
