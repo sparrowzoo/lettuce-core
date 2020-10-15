@@ -20,7 +20,10 @@ import java.util.Collection;
 import java.util.concurrent.*;
 
 import io.lettuce.core.RedisFuture;
+import io.lettuce.core.benchmark.Debugger;
 import io.netty.channel.ChannelFuture;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * Utility methods for {@link java.util.concurrent.Future} handling. This class is part of the internal API and may change
@@ -30,6 +33,8 @@ import io.netty.channel.ChannelFuture;
  * @since 5.1
  */
 public abstract class Futures {
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(Future.class);
+
 
     private Futures() {
         // no instances allowed
@@ -42,7 +47,7 @@ public abstract class Futures {
      * @return the composed {@link CompletableFuture}.
      * @since 5.1.1
      */
-    @SuppressWarnings({ "rawtypes" })
+    @SuppressWarnings({"rawtypes"})
     public static CompletableFuture<Void> allOf(Collection<? extends CompletionStage<?>> stages) {
 
         LettuceAssert.notNull(stages, "Futures must not be null");
@@ -136,7 +141,7 @@ public abstract class Futures {
      * Wait until future is complete or the supplied timeout is reached.
      *
      * @param timeout Maximum time to wait for futures to complete.
-     * @param future Future to wait for.
+     * @param future  Future to wait for.
      * @return {@code true} if future completes in time, otherwise {@code false}
      * @since 6.0
      */
@@ -148,8 +153,8 @@ public abstract class Futures {
      * Wait until future is complete or the supplied timeout is reached.
      *
      * @param timeout Maximum time to wait for futures to complete.
-     * @param unit Unit of time for the timeout.
-     * @param future Future to wait for.
+     * @param unit    Unit of time for the timeout.
+     * @param future  Future to wait for.
      * @return {@code true} if future completes in time, otherwise {@code false}
      * @since 6.0
      */
@@ -192,7 +197,7 @@ public abstract class Futures {
      * Wait until futures are complete or the supplied timeout is reached.
      *
      * @param timeout Maximum time to wait for futures to complete.
-     * @param unit Unit of time for the timeout.
+     * @param unit    Unit of time for the timeout.
      * @param futures Futures to wait for.
      * @return {@code true} if all futures complete in time, otherwise {@code false}
      */
@@ -231,20 +236,21 @@ public abstract class Futures {
      * Wait until futures are complete or the supplied timeout is reached. Commands are canceled if the timeout is reached but
      * the command is not finished.
      *
-     * @param cmd Command to wait for
+     * @param cmd     Command to wait for
      * @param timeout Maximum time to wait for futures to complete
-     * @param unit Unit of time for the timeout
-     * @param <T> Result type
+     * @param unit    Unit of time for the timeout
+     * @param <T>     Result type
      * @return Result of the command.
      * @since 6.0
      */
     public static <T> T awaitOrCancel(RedisFuture<T> cmd, long timeout, TimeUnit unit) {
-
+        Debugger.getDebugger().info(LOG, "sync get await before thread ", Thread.currentThread().getName());
         try {
             if (timeout > 0 && !cmd.await(timeout, unit)) {
                 cmd.cancel(true);
                 throw ExceptionFactory.createTimeoutException(Duration.ofNanos(unit.toNanos(timeout)));
             }
+            Debugger.getDebugger().info(LOG, "sync get await after thread ", Thread.currentThread().getName());
             return cmd.get();
         } catch (Exception e) {
             throw Exceptions.bubble(e);
