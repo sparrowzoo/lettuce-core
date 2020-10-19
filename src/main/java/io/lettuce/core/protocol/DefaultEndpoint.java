@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 
 import io.lettuce.core.*;
 import io.lettuce.core.api.push.PushListener;
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.internal.Futures;
 import io.lettuce.core.internal.LettuceAssert;
 import io.lettuce.core.internal.LettuceFactories;
@@ -405,20 +406,12 @@ public class DefaultEndpoint implements RedisChannelWriter, Endpoint, PushHandle
     }
 
     private ChannelFuture channelWrite(RedisCommand<?, ?, ?> command) {
-
-        if (debugEnabled) {
-            logger.debug("{} write() channelWrite command {}", logPrefix(), command);
-        }
-
+        Debugger.getDebugger().info(logger,"{} pipeline-write() channelWrite command {}", logPrefix(), command.getType().name());
         return channel.write(command);
     }
 
     private ChannelFuture channelWriteAndFlush(RedisCommand<?, ?, ?> command) {
-
-        if (debugEnabled) {
-            logger.debug("{} write() writeAndFlush command {}", logPrefix(), command);
-        }
-
+        Debugger.getDebugger().info(logger,"{} write-and-flush() writeAndFlush command {}", logPrefix(), command.getType().name());
         return channel.writeAndFlush(command);
     }
 

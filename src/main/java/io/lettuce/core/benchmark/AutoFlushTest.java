@@ -33,13 +33,18 @@ public class AutoFlushTest {
         String keys[] = new String[2];
         keys[0] = "aa";
         keys[1] = "bb";
-//        List<KeyValue<String,String>> keyValues=   connection.sync().mget(keys);
-//        connection.setAutoFlushCommands(false);
+        List<KeyValue<String, String>> keyValues = connection.sync().mget(keys);
+        keyValues = connection.sync().mget(keys);
+        keyValues = connection.sync().mget(keys);
 
+
+        connection.setAutoFlushCommands(false);
         RedisAdvancedClusterAsyncCommands<String, String> cmd = connection.async();
         List<RedisFuture<List<KeyValue<String, String>>>> executions = new ArrayList<>();
         RedisFuture<List<KeyValue<String, String>>> mget1 = cmd.mget(keys);
         RedisFuture<List<KeyValue<String, String>>> mget2 = cmd.mget(keys);
+        executions.add(mget1);
+        executions.add(mget2);
         executions.add(mget1);
         executions.add(mget2);
         cmd.flushCommands();
