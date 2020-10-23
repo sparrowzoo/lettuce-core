@@ -3,7 +3,7 @@ package io.lettuce.core.benchmark;
 import io.netty.util.internal.logging.InternalLogger;
 
 public class Debugger {
-    private boolean debug = true;
+    private boolean debug = false;
     private String env = "dev";
     private Debugger() {
     }
