@@ -42,7 +42,7 @@ public class BenchmarkUtils {
             count += currentCount;
             time += key * currentCount;
         }
-        return (int)(time / count);
+        return (int) (time / count);
     }
 
     private static int getTopPercentile(Map<Integer, AtomicInteger> tp, int position) {
@@ -142,6 +142,8 @@ public class BenchmarkUtils {
         ConcurrentSkipListMap<Integer, AtomicInteger> tpMap = new ConcurrentSkipListMap<>();
         long t = System.currentTimeMillis();
         AtomicInteger sampleCount = new AtomicInteger(0);
+        StatefulRedisClusterConnection connection1 = redisClusterClient.connect();
+
         CountDownLatch countDownLatch = new CountDownLatch(threadSize * loop);
         List<StatefulRedisClusterConnection> connections = new ArrayList<>();
         for (int ti = 0; ti < threadSize; ti++) {
@@ -149,6 +151,7 @@ public class BenchmarkUtils {
             connections.add(connection);
             executorService.submit(() -> {
                 for (int i = 0; i < loop; i++) {
+                    //String s = (String) connection.sync().get(keys[0]);
                     long t1 = System.currentTimeMillis();
                     try {
                         if (rateLimiter != null) {
