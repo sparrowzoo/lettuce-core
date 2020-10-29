@@ -50,10 +50,10 @@ public class RedisClusterReactorWithLimitBenchmark {
 
     //java -cp lettuce-core-6.0.0.BUILD-SNAPSHOT.jar io.lettuce.core.benchmark.RedisClusterBenchmark
     public static void main(String[] args) throws InterruptedException, IOException {
-        if (args.length == 0) {
-            System.out.println("key_count thread_size loop slot_size  key_length");
-            System.exit(0);
-        }
+//        if (args.length == 0) {
+//            System.out.println("key_count thread_size loop slot_size  key_length");
+//            System.exit(0);
+//        }
 
         KEY_COUNT = Integer.valueOf(args[0]);
         THREAD_SIZE = Integer.valueOf(args[1]);

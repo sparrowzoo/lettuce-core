@@ -15,6 +15,11 @@
  */
 package io.lettuce.core.internal;
 
+import io.lettuce.core.benchmark.Debugger;
+import io.lettuce.core.cluster.StatefulRedisClusterConnectionImpl;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,13 +43,15 @@ import java.util.function.Function;
  * connection initializations. Shared synchronization leads to a fair synchronization amongst multiple threads waiting to obtain
  * a connection.
  *
- * @author Mark Paluch
  * @param <T> connection type.
  * @param <K> connection key type.
  * @param <F> type of the {@link CompletionStage} handle of the connection progress.
+ * @author Mark Paluch
  * @since 5.1
  */
 public class AsyncConnectionProvider<K, T extends AsyncCloseable, F extends CompletionStage<T>> {
+
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(AsyncConnectionProvider.class);
 
     private final Function<K, F> connectionFactory;
 
@@ -72,6 +79,7 @@ public class AsyncConnectionProvider<K, T extends AsyncCloseable, F extends Comp
      * @return
      */
     public F getConnection(K key) {
+        Debugger.getDebugger().info(logger, "AsyncConnectionProvider.getConnection {}", key);
         return getSynchronizer(key).getConnection();
     }
 
@@ -122,7 +130,7 @@ public class AsyncConnectionProvider<K, T extends AsyncCloseable, F extends Comp
     /**
      * Register a connection identified by {@code key}. Overwrites existing entries.
      *
-     * @param key the connection {@code key}.
+     * @param key        the connection {@code key}.
      * @param connection the connection object.
      */
     public void register(K key, T connection) {
@@ -132,7 +140,7 @@ public class AsyncConnectionProvider<K, T extends AsyncCloseable, F extends Comp
     /**
      * @return number of established connections.
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public int getConnectionCount() {
 
         Sync[] syncs = connections.values().toArray(new Sync[0]);
@@ -217,7 +225,7 @@ public class AsyncConnectionProvider<K, T extends AsyncCloseable, F extends Comp
 
         private static final int PHASE_CANCELED = 3;
 
-        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @SuppressWarnings({"rawtypes", "unchecked"})
         private static final AtomicIntegerFieldUpdater<Sync> PHASE = AtomicIntegerFieldUpdater.newUpdater(Sync.class, "phase");
 
         // Updated with AtomicIntegerFieldUpdater

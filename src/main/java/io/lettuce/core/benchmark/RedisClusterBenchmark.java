@@ -60,7 +60,7 @@ public class RedisClusterBenchmark {
         }
         //lettuce-nioEventLoop
         //lettuce-epollEventLoop
-        // System.setProperty("io.netty.eventLoopThreads", THREAD_SIZE + "");
+        System.setProperty("io.netty.eventLoopThreads", THREAD_SIZE + "");
 
         /**
          * cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l
@@ -116,16 +116,18 @@ public class RedisClusterBenchmark {
                 benchmark.append("slot-" + slot + ",key-size-" + slotDistribution.getPartitioned().get(slot).size() + "\n");
             }
         }
-        TopPercentile withoutHashTagTp = BenchmarkUtils.benchmark(redisClient, withoutHashTag, executorService, THREAD_SIZE, LOOP);
-        TopPercentile hashTagTp = BenchmarkUtils.benchmark(redisClient, hashTag, executorService, THREAD_SIZE, LOOP);
-        benchmark.append("hash-tag--" + hashTagTp + "\n");
-        benchmark.append("non-hash-tag--" + withoutHashTagTp + "\n");
+//        TopPercentile withoutHashTagTp = BenchmarkUtils.benchmark(redisClient, withoutHashTag, executorService, THREAD_SIZE, LOOP);
+//        TopPercentile hashTagTp = BenchmarkUtils.benchmark(redisClient, hashTag, executorService, THREAD_SIZE, LOOP);
+//        benchmark.append("hash-tag--" + hashTagTp + "\n");
+//        benchmark.append("non-hash-tag--" + withoutHashTagTp + "\n");
         System.out.println(benchmark.toString());
+
 
         String fileName = String.format("./redis-benchmark-keycount%s-threadsize%s-loop%s-slotsize%s-keylength%s", KEY_COUNT, THREAD_SIZE, LOOP, SLOT_SIZE, KEY_LENGTH);
         FileUtils.write(new File(fileName), benchmark.toString(), Charset.defaultCharset());
-        redisClient.shutdown();
-        executorService.shutdownNow();
+//        redisClient.shutdown();
+//        executorService.shutdownNow();
+        Thread.sleep(10000000L);
     }
 }
 

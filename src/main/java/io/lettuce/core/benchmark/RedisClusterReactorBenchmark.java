@@ -51,7 +51,7 @@ public class RedisClusterReactorBenchmark {
     public static void main(String[] args) throws InterruptedException, IOException {
         if (args.length == 0) {
             System.out.println("key_count thread_size loop slot_size  key_length");
-            System.exit(0);
+//            System.exit(0);
         }
         if (args.length > 0) {
             KEY_COUNT = Integer.valueOf(args[0]);
@@ -101,7 +101,6 @@ public class RedisClusterReactorBenchmark {
         get.collectList().subscribe(keyValues -> {
             System.out.println(keyValues);
             System.out.println("call back thread" + Thread.currentThread().getName());
-            connection.sync().get("aaa");
         });
         System.out.println("return thread " + Thread.currentThread().getId());
 

@@ -67,17 +67,19 @@ class RoundRobinSocketAddressSupplier implements Supplier<SocketAddress> {
         }
 
         RedisClusterNode redisClusterNode = roundRobin.next();
+        logger.info("RoundRobinSocketAddress first address {}",redisClusterNode.getUri());
         return getSocketAddress(redisClusterNode);
     }
 
     protected void resetRoundRobin(Partitions partitions) {
+        logger.info("reset round robin  partitions {}",partitions.size());
         roundRobin.rebuild(sortFunction.apply(partitions));
     }
 
     protected SocketAddress getSocketAddress(RedisClusterNode redisClusterNode) {
 
         SocketAddress resolvedAddress = clientResources.socketAddressResolver().resolve(redisClusterNode.getUri());
-        logger.debug("Resolved SocketAddress {} using for Cluster node {}", resolvedAddress, redisClusterNode.getNodeId());
+        logger.info("Resolved SocketAddress {} using for Cluster node {}", resolvedAddress, redisClusterNode.getNodeId());
         return resolvedAddress;
     }
 

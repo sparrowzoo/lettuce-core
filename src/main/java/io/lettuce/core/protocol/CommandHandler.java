@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisConnectionException;
@@ -48,6 +49,8 @@ import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.internal.logging.InternalLogLevel;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * A netty {@link ChannelHandler} responsible for writing redis commands and reading responses from the server.
@@ -123,7 +126,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
      * @param endpoint        must not be {@code null}.
      */
     public CommandHandler(ClientOptions clientOptions, ClientResources clientResources, Endpoint endpoint) {
-        Debugger.getDebugger().info(logger,"init new command handler thread-name {}", Thread.currentThread().getName());
+        Debugger.getDebugger().info(logger, "init new command handler thread-name {}", Thread.currentThread().getName());
         LettuceAssert.notNull(clientOptions, "ClientOptions must not be null");
         LettuceAssert.notNull(clientResources, "ClientResources must not be null");
         LettuceAssert.notNull(endpoint, "RedisEndpoint must not be null");
@@ -389,14 +392,14 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
     private void writeSingleCommand(ChannelHandlerContext ctx, RedisCommand<?, ?, ?> command, ChannelPromise promise) {
 
         if (command.getType().name().equalsIgnoreCase("get")) {
-            Debugger.getDebugger().info(logger,"write single command {}", command.getType());
+            Debugger.getDebugger().info(logger, "write single command {}", command.getType());
         }
         if (!isWriteable(command)) {
             promise.trySuccess();
             return;
         }
 
-        Debugger.getDebugger().info(logger,"add stack command {} promise {}", command, promise);
+        Debugger.getDebugger().info(logger, "add stack command {} promise {}", command, promise);
         addToStack(command, promise);
 
         if (tracingEnabled && command instanceof CompleteableCommand) {
@@ -565,7 +568,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
     }
 
     protected void decode(ChannelHandlerContext ctx, ByteBuf buffer) throws InterruptedException {
-
+        logger.info("decode callback CommandHandler.decode()");
         if (pristine) {
 
             if (stack.isEmpty() && buffer.isReadable() && !isPushDecode(buffer)) {
@@ -583,7 +586,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
         }
 
         while (canDecode(buffer)) {
-            Debugger.getDebugger().info(logger,"can decode thread-name {}", Thread.currentThread().getName());
+            Debugger.getDebugger().info(logger, "can decode thread-name {}", Thread.currentThread().getName());
 
             if (isPushDecode(buffer)) {
 
@@ -610,8 +613,8 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
             } else {
 
                 RedisCommand<?, ?, ?> command = stack.peek();
-                if (command.getType().name().equalsIgnoreCase("mget")) {
-                   Debugger.getDebugger().info(logger,"mget callback args {},thread-name {}", command.getArgs(), Thread.currentThread().getName());
+                if (command.getType().name().equalsIgnoreCase("get")) {
+                    Debugger.getDebugger().info(logger, "get callback args {},thread-name {}", command.getArgs(), Thread.currentThread().getName());
                 }
                 if (debugEnabled) {
                     logger.debug("{} Stack contains: {} commands", logPrefix(), stack.size());
@@ -706,10 +709,20 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
      * @see RedisCommand#complete()
      */
     protected void complete(RedisCommand<?, ?, ?> command) {
-        if(command.getType().name().equalsIgnoreCase("mget")){
-            Debugger.getDebugger().info(logger,"command compete {}", Thread.currentThread().getName());
+        if (command.getType().name().equalsIgnoreCase("hget")) {
+            Debugger.getDebugger().info(logger, "command compete {}", Thread.currentThread().getName());
         }
-        command.complete();
+        ElasticThreadPoolProvider elasticThreadPoolProvider = ElasticThreadPoolProvider.getSchedulerProvider();
+        if (elasticThreadPoolProvider.isUseOtherThreadPool()) {
+            ElasticThreadPoolProvider.getSchedulerProvider().getScheduler().schedule(new Runnable() {
+                @Override
+                public void run() {
+                    command.complete();
+                }
+            });
+        } else {
+            command.complete();
+        }
     }
 
     /**
@@ -804,7 +817,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
     }
 
     protected boolean decode(ByteBuf buffer, RedisCommand<?, ?, ?> command, CommandOutput<?, ?, ?> output) {
-        Debugger.getDebugger().info(logger,"command decode thread-name{}", Thread.currentThread().getName());
+        Debugger.getDebugger().info(logger, "command decode thread-name{}", Thread.currentThread().getName());
         return rsm.decode(buffer, output, command::completeExceptionally);
     }
 

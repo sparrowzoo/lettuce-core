@@ -413,13 +413,9 @@ class DefaultClusterTopologyRefresh implements ClusterTopologyRefresh {
         }
 
         @SuppressWarnings("rawtypes")
+
         public CompletableFuture<Void> close() {
-            logger.info("cluster topology close waiting for 5000s", DefaultClusterTopologyRefresh.class);
-            try {
-                Thread.sleep(5000L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            logger.info("cluster topology close ...", DefaultClusterTopologyRefresh.class);
             CompletableFuture[] futures = connections.values().stream()
                     .map(it -> it.thenCompose(StatefulConnection::closeAsync).exceptionally(ignore -> null))
                     .toArray(CompletableFuture[]::new);

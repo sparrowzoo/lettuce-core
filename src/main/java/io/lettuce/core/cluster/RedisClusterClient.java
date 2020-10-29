@@ -634,6 +634,7 @@ public class RedisClusterClient extends AbstractRedisClient {
                 .defer(() -> connect(socketAddressSupplier, endpoint, connection, commandHandlerSupplier));
 
         for (int i = 1; i < getConnectionAttempts(); i++) {
+            logger.info("RedisClusterClient.getConnectionAttempts()",getConnectionAttempts());
             connectionMono = connectionMono
                     .onErrorResume(t -> connect(socketAddressSupplier, endpoint, connection, commandHandlerSupplier));
         }

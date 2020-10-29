@@ -142,8 +142,6 @@ public class BenchmarkUtils {
         ConcurrentSkipListMap<Integer, AtomicInteger> tpMap = new ConcurrentSkipListMap<>();
         long t = System.currentTimeMillis();
         AtomicInteger sampleCount = new AtomicInteger(0);
-        StatefulRedisClusterConnection connection1 = redisClusterClient.connect();
-
         CountDownLatch countDownLatch = new CountDownLatch(threadSize * loop);
         List<StatefulRedisClusterConnection> connections = new ArrayList<>();
         for (int ti = 0; ti < threadSize; ti++) {
@@ -151,7 +149,6 @@ public class BenchmarkUtils {
             connections.add(connection);
             executorService.submit(() -> {
                 for (int i = 0; i < loop; i++) {
-                    //String s = (String) connection.sync().get(keys[0]);
                     long t1 = System.currentTimeMillis();
                     try {
                         if (rateLimiter != null) {
@@ -159,10 +156,16 @@ public class BenchmarkUtils {
                         }
                         Flux<KeyValue<String, String>> flux = connection.reactive().mget(keys);
                         flux.collectList().subscribe(stringStringKeyValue -> {
+                            try {
+                                Thread.sleep(1L);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                             Integer cost = (int) (System.currentTimeMillis() - t1);
                             if (!tpMap.containsKey(cost)) {
                                 tpMap.put(cost, new AtomicInteger(0));
                             }
+                            System.out.println("call back thread "+Thread.currentThread().getName());
                             tpMap.get(cost).incrementAndGet();
                             countDownLatch.countDown();
                         });

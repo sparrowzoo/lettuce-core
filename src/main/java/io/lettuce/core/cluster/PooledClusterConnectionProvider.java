@@ -27,6 +27,7 @@ import io.lettuce.core.*;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.push.PushMessage;
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.cluster.ClusterNodeConnectionFactory.ConnectionKey;
 import io.lettuce.core.cluster.api.push.RedisClusterPushListener;
 import io.lettuce.core.cluster.models.partitions.Partitions;
@@ -136,6 +137,7 @@ class PooledClusterConnectionProvider<K, V>
     private CompletableFuture<StatefulRedisConnection<K, V>> getWriteConnection(int slot) {
 
         CompletableFuture<StatefulRedisConnection<K, V>> writer;// avoid races when reconfiguring partitions.
+        Debugger.getDebugger().info(logger,"getWriteConnection() slot {}",slot);
         synchronized (stateLock) {
             writer = writers[slot];
         }
@@ -152,6 +154,7 @@ class PooledClusterConnectionProvider<K, V>
             // host because the nodeId can be handled by a different host.
             RedisURI uri = partition.getUri();
             ConnectionKey key = new ConnectionKey(Intent.WRITE, uri.getHost(), uri.getPort());
+            logger.info("connection key {}",key);
 
             ConnectionFuture<StatefulRedisConnection<K, V>> future = getConnectionAsync(key);
 

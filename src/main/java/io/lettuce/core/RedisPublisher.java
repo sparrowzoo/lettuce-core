@@ -290,9 +290,7 @@ class RedisPublisher<K, V, T> implements Publisher<T> {
 
                     try {
                         DEMAND.decrementAndGet(this);
-                        if (this.command.getType().name().equalsIgnoreCase("mget")) {
-                            this.subscriber.onNext(t);
-                        }
+                        this.subscriber.onNext(t);
                     } catch (Exception e) {
                         onError(e);
                     }

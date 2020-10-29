@@ -238,7 +238,7 @@ public abstract class AbstractRedisClient {
         LettuceAssert.notNull(connectionPoint, "ConnectionPoint must not be null");
 
         EventLoopGroup eventLoopGroup = getEventLoopGroup(connectionPoint);
-        Debugger.getDebugger().info(logger,"redis bootstrap group {}", eventLoopGroup);
+        Debugger.getDebugger().info(logger,"###########################################redis bootstrap group {}", eventLoopGroup);
         connectionBuilder.bootstrap().group(eventLoopGroup);
 
         if (connectionPoint.getSocket() != null) {

@@ -24,6 +24,7 @@ import java.util.stream.IntStream;
 
 import io.lettuce.core.*;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.cluster.ClusterConnectionProvider.Intent;
 import io.lettuce.core.cluster.models.partitions.Partitions;
 import io.lettuce.core.codec.StringCodec;
@@ -33,6 +34,8 @@ import io.lettuce.core.internal.LettuceAssert;
 import io.lettuce.core.output.StatusOutput;
 import io.lettuce.core.protocol.*;
 import io.lettuce.core.resource.ClientResources;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * Channel writer for cluster operation. This writer looks up the right partition by hash/slot for the operation.
@@ -41,6 +44,7 @@ import io.lettuce.core.resource.ClientResources;
  * @since 3.0
  */
 class ClusterDistributionChannelWriter implements RedisChannelWriter {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ClusterDistributionChannelWriter.class);
 
     private final RedisChannelWriter defaultWriter;
 
@@ -124,10 +128,9 @@ class ClusterDistributionChannelWriter implements RedisChannelWriter {
 
             ByteBuffer encodedKey = args.getFirstEncodedKey();
             if (encodedKey != null) {
-
                 int hash = getSlot(encodedKey);
                 Intent intent = getIntent(command.getType());
-
+                Debugger.getDebugger().info(logger,"intent {} and slot {}",intent,hash);
                 CompletableFuture<StatefulRedisConnection<K, V>> connectFuture = ((AsyncClusterConnectionProvider) clusterConnectionProvider)
                         .getConnectionAsync(intent, hash);
 

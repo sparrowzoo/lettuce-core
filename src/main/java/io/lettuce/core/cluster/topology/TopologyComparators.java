@@ -25,6 +25,8 @@ import io.lettuce.core.cluster.models.partitions.Partitions;
 import io.lettuce.core.cluster.models.partitions.RedisClusterNode;
 import io.lettuce.core.internal.LettuceAssert;
 import io.lettuce.core.internal.LettuceLists;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * Comparators for {@link RedisClusterNode} and {@link RedisURI}.
@@ -33,6 +35,8 @@ import io.lettuce.core.internal.LettuceLists;
  * @author Alessandro Simi
  */
 public class TopologyComparators {
+
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(TopologyComparators.class);
 
     /**
      * Sort partitions by a {@code fixedOrder} and by {@link RedisURI}. Nodes are sorted as provided in {@code fixedOrder}.
@@ -91,9 +95,8 @@ public class TopologyComparators {
      * @return List containing {@link RedisClusterNode}s ordered by client count
      */
     public static List<RedisClusterNode> sortByClientCount(Iterable<RedisClusterNode> clusterNodes) {
-
+        logger.info("TopologyComparators.sortByClientCount");
         LettuceAssert.notNull(clusterNodes, "Cluster nodes must not be null");
-
         List<RedisClusterNode> ordered = LettuceLists.newList(clusterNodes);
         ordered.sort(ClientCountComparator.INSTANCE);
         return ordered;

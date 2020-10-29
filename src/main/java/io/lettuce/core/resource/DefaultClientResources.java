@@ -114,7 +114,7 @@ public class DefaultClientResources implements ClientResources {
          */
         int threads = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads",
                 Math.max(MIN_IO_THREADS, Runtime.getRuntime().availableProcessors())));
-        Debugger.getDebugger().info(logger,"default io thread {}",threads);
+        Debugger.getDebugger().info(logger, "default io thread {}", threads);
 
         DEFAULT_IO_THREADS = threads;
         DEFAULT_COMPUTATION_THREADS = threads;
@@ -202,6 +202,7 @@ public class DefaultClientResources implements ClientResources {
         }
 
         if (builder.eventBus == null) {
+            logger.info("lettuce-eventExecutor is event command collector");
             eventBus = new DefaultEventBus(Schedulers.fromExecutor(eventExecutorGroup));
         } else {
             eventBus = builder.eventBus;
@@ -318,7 +319,7 @@ public class DefaultClientResources implements ClientResources {
          * Sets the {@link EventPublisherOptions} to publish command latency metrics using the {@link EventBus}.
          *
          * @param commandLatencyPublisherOptions the {@link EventPublisherOptions} to publish command latency metrics using the
-         *        {@link EventBus}, must not be {@code null}.
+         *                                       {@link EventBus}, must not be {@code null}.
          * @return {@code this} {@link Builder}.
          */
         @Override
@@ -568,7 +569,6 @@ public class DefaultClientResources implements ClientResources {
         }
 
         /**
-         *
          * @return a new instance of {@link DefaultClientResources}.
          */
         @Override
@@ -589,8 +589,7 @@ public class DefaultClientResources implements ClientResources {
      * </p>
      *
      * @return a {@link DefaultClientResources.Builder} to create new {@link DefaultClientResources} whose settings are
-     *         replicated from the current {@link DefaultClientResources}.
-     *
+     * replicated from the current {@link DefaultClientResources}.
      * @since 5.1
      */
     @Override
@@ -635,9 +634,9 @@ public class DefaultClientResources implements ClientResources {
      * Shutdown the {@link ClientResources}.
      *
      * @param quietPeriod the quiet period as described in the documentation
-     * @param timeout the maximum amount of time to wait until the executor is shutdown regardless if a task was submitted
-     *        during the quiet period
-     * @param timeUnit the unit of {@code quietPeriod} and {@code timeout}
+     * @param timeout     the maximum amount of time to wait until the executor is shutdown regardless if a task was submitted
+     *                    during the quiet period
+     * @param timeUnit    the unit of {@code quietPeriod} and {@code timeout}
      * @return eventually the success/failure of the shutdown without errors.
      */
     @SuppressWarnings("unchecked")
@@ -647,7 +646,7 @@ public class DefaultClientResources implements ClientResources {
 
         shutdownCalled = true;
         DefaultPromise<Void> voidPromise = new DefaultPromise<>(ImmediateEventExecutor.INSTANCE);
-        PromiseCombiner aggregator = new PromiseCombiner(ImmediateEventExecutor.INSTANCE);
+        PromiseCombiner aggregator = new PromiseCombiner();
 
         if (metricEventPublisher != null) {
             metricEventPublisher.shutdown();

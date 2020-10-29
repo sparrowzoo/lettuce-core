@@ -279,7 +279,7 @@ public class DefaultEventLoopGroupProvider implements EventLoopGroupProvider {
         Map<Class<? extends EventExecutorGroup>, EventExecutorGroup> copy = new HashMap<>(eventLoopGroups);
 
         DefaultPromise<Void> overall = new DefaultPromise<>(ImmediateEventExecutor.INSTANCE);
-        PromiseCombiner combiner = new PromiseCombiner(ImmediateEventExecutor.INSTANCE);
+        PromiseCombiner combiner = new PromiseCombiner();
 
         for (EventExecutorGroup executorGroup : copy.values()) {
             combiner.add(doRelease(executorGroup, quietPeriod, timeout, timeUnit));

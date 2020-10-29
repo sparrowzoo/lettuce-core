@@ -20,8 +20,11 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.output.CommandOutput;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * Wrapper for a command.
@@ -30,11 +33,13 @@ import io.netty.buffer.ByteBuf;
  */
 public class CommandWrapper<K, V, T> implements RedisCommand<K, V, T>, CompleteableCommand<T>, DecoratedCommand<K, V, T> {
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(CommandWrapper.class);
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private static final AtomicReferenceFieldUpdater<CommandWrapper, Object[]> ONCOMPLETE = AtomicReferenceFieldUpdater
             .newUpdater(CommandWrapper.class, Object[].class, "onComplete");
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private static final Object[] EMPTY = new Object[0];
 
     protected final RedisCommand<K, V, T> command;
@@ -53,11 +58,14 @@ public class CommandWrapper<K, V, T> implements RedisCommand<K, V, T>, Completea
     }
 
     @Override
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public void complete() {
 
         command.complete();
 
+        if (this.command.getType().name().equalsIgnoreCase("get") || this.command.getType().name().equalsIgnoreCase("mget")) {
+            Debugger.getDebugger().info(logger, this.command.getType().name());
+        }
         Object[] consumers = ONCOMPLETE.get(this);
 
         if (!expireCallbacks(consumers)) {
@@ -102,7 +110,7 @@ public class CommandWrapper<K, V, T> implements RedisCommand<K, V, T>, Completea
         return result;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void notifyBiConsumer(Throwable exception) {
 
         Object[] consumers = ONCOMPLETE.get(this);
@@ -165,10 +173,10 @@ public class CommandWrapper<K, V, T> implements RedisCommand<K, V, T>, Completea
         addOnComplete(action);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void addOnComplete(Object action) {
 
-        for (;;) {
+        for (; ; ) {
 
             Object[] existing = ONCOMPLETE.get(this);
             Object[] updated = new Object[existing.length + 1];
@@ -222,7 +230,7 @@ public class CommandWrapper<K, V, T> implements RedisCommand<K, V, T>, Completea
     /**
      * Returns an object that implements the given interface to allow access to non-standard methods, or standard methods not
      * exposed by the proxy.
-     *
+     * <p>
      * If the receiver implements the interface then the result is the receiver or a proxy for the receiver. If the receiver is
      * a wrapper and the wrapped object implements the interface then the result is the wrapped object or a proxy for the
      * wrapped object. Otherwise return the the result of calling <code>unwrap</code> recursively on the wrapped object or a
@@ -230,7 +238,7 @@ public class CommandWrapper<K, V, T> implements RedisCommand<K, V, T>, Completea
      * returned.
      *
      * @param wrapped
-     * @param iface A Class defining an interface that the result must implement.
+     * @param iface   A Class defining an interface that the result must implement.
      * @return the unwrapped instance or {@code null}.
      * @since 5.1
      */

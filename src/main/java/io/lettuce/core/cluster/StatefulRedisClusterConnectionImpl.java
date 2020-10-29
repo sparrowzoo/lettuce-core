@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import io.lettuce.core.*;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.benchmark.Debugger;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
 import io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands;
@@ -47,6 +48,8 @@ import io.lettuce.core.protocol.CommandArgsAccessor;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.ConnectionWatchdog;
 import io.lettuce.core.protocol.RedisCommand;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * A thread-safe connection to a Redis Cluster. Multiple threads may share one {@link StatefulRedisClusterConnectionImpl}
@@ -59,6 +62,8 @@ import io.lettuce.core.protocol.RedisCommand;
  */
 public class StatefulRedisClusterConnectionImpl<K, V> extends RedisChannelHandler<K, V>
         implements StatefulRedisClusterConnection<K, V> {
+
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(StatefulRedisClusterConnectionImpl.class);
 
     private final ClusterPushHandler pushHandler;
 
@@ -203,7 +208,7 @@ public class StatefulRedisClusterConnectionImpl<K, V> extends RedisChannelHandle
     @Override
     public <T> RedisCommand<K, V, T> dispatch(RedisCommand<K, V, T> command) {
         if(command.getType().name().equalsIgnoreCase("get")){
-            System.out.println("dispacher");
+           Debugger.getDebugger().info(logger,"dispacher");
         }
         return super.dispatch(preProcessCommand(command));
     }
