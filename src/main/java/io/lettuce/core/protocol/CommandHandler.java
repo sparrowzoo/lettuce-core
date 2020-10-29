@@ -709,9 +709,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
      * @see RedisCommand#complete()
      */
     protected void complete(RedisCommand<?, ?, ?> command) {
-        if (command.getType().name().equalsIgnoreCase("hget")) {
-            Debugger.getDebugger().info(logger, "command compete {}", Thread.currentThread().getName());
-        }
+        Debugger.getDebugger().info(logger, "CommandHandler.compete() {}", Thread.currentThread().getName());
         ElasticThreadPoolProvider elasticThreadPoolProvider = ElasticThreadPoolProvider.getSchedulerProvider();
         if (elasticThreadPoolProvider.isUseOtherThreadPool()) {
             ElasticThreadPoolProvider.getSchedulerProvider().getScheduler().schedule(new Runnable() {
