@@ -64,16 +64,7 @@ public class RedisClusterReactorBenchmark {
         executorService = Executors.newFixedThreadPool(THREAD_SIZE);
         // Syntax: redis://[password@]host[:port]
         String redisIpPorts = Debugger.getDebugger().getIpPortPair();
-        RedisClusterClient redisClient = RedisClusterClient.create("redis://" + redisIpPorts);
-        ClusterTopologyRefreshOptions clusterTopologyRefreshOptions = ClusterTopologyRefreshOptions.builder()//
-                .enablePeriodicRefresh(10, TimeUnit.HOURS)//
-                .enableAllAdaptiveRefreshTriggers()//
-                .build();
-
-        ClusterClientOptions clusterClientOptions = ClusterClientOptions.builder()//
-                .topologyRefreshOptions(clusterTopologyRefreshOptions)//
-                .build();
-        redisClient.setOptions(clusterClientOptions);
+        RedisClusterClient redisClient =Debugger.getDebugger().getClient();
 
         StatefulRedisClusterConnection<String, String> connection = redisClient.connect();
         String keys[] = new String[KEY_COUNT];
@@ -96,13 +87,13 @@ public class RedisClusterReactorBenchmark {
         }
 
 
-        Flux<KeyValue<String, String>> get = reactive.mget(keys);
-        System.out.println("current thread" + Thread.currentThread().getName());
-        get.collectList().subscribe(keyValues -> {
-            System.out.println(keyValues);
-            System.out.println("call back thread" + Thread.currentThread().getName());
-        });
-        System.out.println("return thread " + Thread.currentThread().getId());
+//        Flux<KeyValue<String, String>> get = reactive.mget(keys);
+//        System.out.println("current thread" + Thread.currentThread().getName());
+//        get.collectList().subscribe(keyValues -> {
+//            System.out.println(keyValues);
+//            System.out.println("call back thread" + Thread.currentThread().getName());
+//        });
+//        System.out.println("return thread " + Thread.currentThread().getId());
 
         StringBuilder benchmark = new StringBuilder();
         PartitionSlotDistribution slotDistribution = BenchmarkUtils.getPartitionSlotDistribution(redisClient.getPartitions(), hashTagKeys);

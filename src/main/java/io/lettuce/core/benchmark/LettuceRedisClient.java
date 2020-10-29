@@ -5,6 +5,7 @@ import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.event.DefaultEventPublisherOptions;
 import io.lettuce.core.metrics.CommandLatencyCollectorOptions;
+import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.resource.Delay;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
@@ -50,7 +51,22 @@ public class LettuceRedisClient {
 
         ClusterClientOptions clusterClientOptions = ClusterClientOptions.builder()//
                 .topologyRefreshOptions(clusterTopologyRefreshOptions)//
-                .publishOnScheduler(true)//关键
+                .publishOnScheduler(true)
+                /**
+                 * Use a dedicated {@link reactor.core.scheduler.Scheduler} to emit reactive data signals. Enabling this option can be
+                 * useful for reactive sequences that require a significant amount of processing with a single/a few Redis connections.
+                 * <p>
+                 * A single Redis connection operates on a single thread. Operations that require a significant amount of processing can
+                 * lead to a single-threaded-like behavior for all consumers of the Redis connection. When enabled, data signals will be
+                 * emitted using a different thread served by {@link ClientResources#eventExecutorGroup()}. Defaults to {@code false}
+                 * , see {@link #DEFAULT_PUBLISH_ON_SCHEDULER}.
+                 *
+                 * @param publishOnScheduler true/false
+                 * @return {@code this}
+                 * @since 5.2
+                 * @see org.reactivestreams.Subscriber#onNext(Object)
+                 * @see ClientResources#eventExecutorGroup()
+                 */
                 .build();
 
         redisClient.setOptions(clusterClientOptions);

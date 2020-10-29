@@ -143,10 +143,8 @@ public class BenchmarkUtils {
         long t = System.currentTimeMillis();
         AtomicInteger sampleCount = new AtomicInteger(0);
         CountDownLatch countDownLatch = new CountDownLatch(threadSize * loop);
-        List<StatefulRedisClusterConnection> connections = new ArrayList<>();
+        StatefulRedisClusterConnection connection = redisClusterClient.connect();
         for (int ti = 0; ti < threadSize; ti++) {
-            StatefulRedisClusterConnection connection = redisClusterClient.connect();
-            connections.add(connection);
             executorService.submit(() -> {
                 for (int i = 0; i < loop; i++) {
                     long t1 = System.currentTimeMillis();
@@ -157,7 +155,8 @@ public class BenchmarkUtils {
                         Flux<KeyValue<String, String>> flux = connection.reactive().mget(keys);
                         flux.collectList().subscribe(stringStringKeyValue -> {
                             try {
-                                Thread.sleep(1L);
+                                Thread.sleep(10L);
+                                System.out.println("call-back "+Thread.currentThread().getName());
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -165,7 +164,6 @@ public class BenchmarkUtils {
                             if (!tpMap.containsKey(cost)) {
                                 tpMap.put(cost, new AtomicInteger(0));
                             }
-                            System.out.println("call back thread "+Thread.currentThread().getName());
                             tpMap.get(cost).incrementAndGet();
                             countDownLatch.countDown();
                         });
@@ -178,9 +176,6 @@ public class BenchmarkUtils {
             });
         }
         countDownLatch.await();
-        for (StatefulRedisClusterConnection connection : connections) {
-            connection.close();
-        }
         TopPercentile topPercentile = getTopPercentile(tpMap);
         topPercentile.setStartTime(t);
         topPercentile.setEndTime(System.currentTimeMillis());
