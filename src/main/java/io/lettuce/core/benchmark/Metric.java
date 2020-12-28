@@ -4,8 +4,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-class TopPercentile {
+class Metric {
     public static final String FORMAT_YYYY_MM_DD_HH_MM_SS_MS = "yyyy-MM-dd HH:mm:ss SSS";
+    private String condition;
     private String startTime;
     private String endTime;
     private int tp999;
@@ -16,10 +17,10 @@ class TopPercentile {
     private int avg;
     private int allCount;
 
-    public TopPercentile() {
+    public Metric() {
     }
 
-    public TopPercentile(int tp99, int tp95, int tp999, int avg, int max) {
+    public Metric(int tp99, int tp95, int tp999, int avg, int max) {
         this.tp99 = tp99;
         this.tp95 = tp95;
         this.tp999 = tp999;
@@ -72,8 +73,8 @@ class TopPercentile {
     }
 
     public void setStartTime(Long startTime) {
-        DateFormat sdf =new SimpleDateFormat(FORMAT_YYYY_MM_DD_HH_MM_SS_MS);
-        this.startTime= sdf.format(new Date(startTime));
+        DateFormat sdf = new SimpleDateFormat(FORMAT_YYYY_MM_DD_HH_MM_SS_MS);
+        this.startTime = sdf.format(new Date(startTime));
     }
 
     public String getEndTime() {
@@ -81,8 +82,8 @@ class TopPercentile {
     }
 
     public void setEndTime(Long endTime) {
-        DateFormat sdf =new SimpleDateFormat(FORMAT_YYYY_MM_DD_HH_MM_SS_MS);
-        this.endTime= sdf.format(new Date(endTime));
+        DateFormat sdf = new SimpleDateFormat(FORMAT_YYYY_MM_DD_HH_MM_SS_MS);
+        this.endTime = sdf.format(new Date(endTime));
     }
 
 
@@ -102,18 +103,16 @@ class TopPercentile {
         this.allCount = allCount;
     }
 
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    public float getQps() {
+        return allCount / (sum / 1000F);
+    }
+
     @Override
     public String toString() {
-        return "TopPercentile{" +
-                "startTime='" + startTime + '\'' +
-                ", endTime='" + endTime + '\'' +
-                ", tp999=" + tp999 +
-                ", tp99=" + tp99 +
-                ", tp95=" + tp95 +
-                ", max=" + max +
-                ", sum=" + sum +
-                ", avg=" + avg +
-                ", allCount=" + allCount +
-                '}';
+        return this.condition + "|" + this.startTime + "|" + this.endTime + "|" + tp999 + "|" + tp99 + "|" + tp95 + "|" + max + "|" + sum + "|" + avg + "|" + this.allCount + "|" + this.getQps();
     }
 }

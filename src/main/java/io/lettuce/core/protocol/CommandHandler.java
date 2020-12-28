@@ -392,7 +392,7 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
     private void writeSingleCommand(ChannelHandlerContext ctx, RedisCommand<?, ?, ?> command, ChannelPromise promise) {
 
         if (command.getType().name().equalsIgnoreCase("get")) {
-            Debugger.getDebugger().info(logger, "write single command {}", command.getType());
+            Debugger.getDebugger().info(logger, "write single command {} thread {}", command.getType(),Thread.currentThread().getName());
         }
         if (!isWriteable(command)) {
             promise.trySuccess();
@@ -709,18 +709,19 @@ public class CommandHandler extends ChannelDuplexHandler implements HasQueuedCom
      * @see RedisCommand#complete()
      */
     protected void complete(RedisCommand<?, ?, ?> command) {
-        Debugger.getDebugger().info(logger, "CommandHandler.compete() {}", Thread.currentThread().getName());
-        ElasticThreadPoolProvider elasticThreadPoolProvider = ElasticThreadPoolProvider.getSchedulerProvider();
-        if (elasticThreadPoolProvider.isUseOtherThreadPool()) {
-            ElasticThreadPoolProvider.getSchedulerProvider().getScheduler().schedule(new Runnable() {
-                @Override
-                public void run() {
-                    command.complete();
-                }
-            });
-        } else {
-            command.complete();
-        }
+        command.complete();
+//
+//        Debugger.getDebugger().info(logger, "CommandHandler.compete() {}", Thread.currentThread().getName());
+//        ElasticThreadPoolProvider elasticThreadPoolProvider = ElasticThreadPoolProvider.getSchedulerProvider();
+//        if (elasticThreadPoolProvider.isUseOtherThreadPool()) {
+//            ElasticThreadPoolProvider.getSchedulerProvider().getScheduler().schedule(new Runnable() {
+//                @Override
+//                public void run() {
+//                    command.complete();
+//                }
+//            });
+//        } else {
+//        }
     }
 
     /**

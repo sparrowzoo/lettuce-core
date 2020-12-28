@@ -1,6 +1,8 @@
 package io.lettuce.core.benchmark;
 
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.SocketOptions;
+import io.lettuce.core.TimeoutOptions;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.cluster.ClusterClientOptions;
 import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
@@ -13,27 +15,36 @@ import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.resource.Delay;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import io.netty.util.concurrent.RejectedExecutionHandler;
+import io.netty.util.concurrent.RejectedExecutionHandlers;
 import io.netty.util.internal.logging.InternalLogger;
+import org.reactivestreams.Subscriber;
+import reactor.core.scheduler.Scheduler;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 public class Debugger {
     private boolean debug = false;
-    private boolean reactive=false;
+    private boolean publishOnScheduler=true;
     private String env = "dev";
 
     private Debugger() {
     }
 
-    public RedisClusterClient getClient(){
+    public void setPublishOnScheduler(boolean publishOnScheduler) {
+        this.publishOnScheduler = publishOnScheduler;
+    }
+
+    public RedisClusterClient getClient(int threadSize){
         DefaultClientResources resources =
                 DefaultClientResources.builder().
                         commandLatencyPublisherOptions(DefaultEventPublisherOptions.disabled())
                         .commandLatencyCollectorOptions(CommandLatencyCollectorOptions.disabled())
                         .reconnectDelay(Delay.exponential())
-                        .eventExecutorGroup(new DefaultEventExecutorGroup(8, new DefaultThreadFactory("my-compute-thread")))
-                        .computationThreadPoolSize(8)
-                        .ioThreadPoolSize(8)
+                        .eventExecutorGroup(new DefaultEventExecutorGroup(threadSize, new DefaultThreadFactory("my-compute-thread"),Integer.MAX_VALUE, RejectedExecutionHandlers.backoff(3,5,TimeUnit.MILLISECONDS)))
+                        .computationThreadPoolSize(threadSize)
+                        .ioThreadPoolSize(threadSize)
                         .build();
 
 
@@ -48,9 +59,12 @@ public class Debugger {
 
         ClusterClientOptions clusterClientOptions = ClusterClientOptions.builder()//
                 .topologyRefreshOptions(clusterTopologyRefreshOptions)//
-                .publishOnScheduler(reactive)
+                .publishOnScheduler(publishOnScheduler)
+                .socketOptions(SocketOptions.builder().keepAlive(true).connectTimeout(Duration.ofSeconds(600)).build())
+                .timeoutOptions(TimeoutOptions.builder().fixedTimeout(Duration.ofSeconds(600)).build())
+                .requestQueueSize(1000000)
                 /**
-                 * Use a dedicated {@link reactor.core.scheduler.Scheduler} to emit reactive data signals. Enabling this option can be
+                 * Use a dedicated {@link Scheduler} to emit reactive data signals. Enabling this option can be
                  * useful for reactive sequences that require a significant amount of processing with a single/a few Redis connections.
                  * <p>
                  * A single Redis connection operates on a single thread. Operations that require a significant amount of processing can
@@ -61,7 +75,7 @@ public class Debugger {
                  * @param publishOnScheduler true/false
                  * @return {@code this}
                  * @since 5.2
-                 * @see org.reactivestreams.Subscriber#onNext(Object)
+                 * @see Subscriber#onNext(Object)
                  * @see ClientResources#eventExecutorGroup()
                  */
                 .build();
